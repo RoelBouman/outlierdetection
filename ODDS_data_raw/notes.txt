@@ -1,0 +1,6 @@
+Niet bereikbaar:
+http://personal.gscit.monash.edu.au/~kmting/Mass
+
+(nog) Niet gebruikt: 
+Heart: https://archive.ics.uci.edu/ml/datasets/SPECTF+Heart
+- gebruik voor onderzoek beperkt door voorgemaakt test/train split. Kan gecombineerd worden indien gewenst.
