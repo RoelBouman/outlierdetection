@@ -105,6 +105,7 @@ for picklefile_name in picklefile_names:
     #loop over all methods:
     CV_results = {}
     for method, settings in methods_params.items():
+        print("______"+method)
         clf = ODWrapper(settings["method"]())
         gridsearch = GridSearchCV(clf, settings["params"], scoring=scorer, cv = StratifiedKFold(n_splits=5,shuffle=True), return_train_score=False)
         gridsearch.fit(X, y)
