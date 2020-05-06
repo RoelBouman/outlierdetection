@@ -33,8 +33,11 @@ for file_name in HDFlist:
 for file_name in [f for f in matfile_names if f not in HDFlist]:
     full_path_filename = os.path.join(data_dir, file_name)
     mat_file = loadmat(full_path_filename)
+    
     print("X shape: ", mat_file["X"].shape)
+    print("X type: ", mat_file["X"].dtype)
     print("y shape: ", mat_file["y"].shape)
+    print("y type: ", mat_file["y"].dtype)
     
     
 for file_name in HDFlist:
@@ -42,7 +45,9 @@ for file_name in HDFlist:
     mat_file = h5py.File(full_path_filename, 'r')
     
     print("X shape: ", mat_file["X"].shape)
+    print("X type: ", mat_file["X"].dtype)
     print("y shape: ", mat_file["y"].shape)
+    print("y type: ", mat_file["y"].dtype)
     
 #%% Check for missing values
 # ecoli.mat heeft 2352 missing values
