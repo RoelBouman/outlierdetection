@@ -3,13 +3,13 @@ import pickle
 import os
 import numpy as np
 import pandas as pd
-from pyod.models.knn import KNN 
-from pyod.models.iforest import IForest
 from sklearn.metrics import make_scorer
 #from sklearn.metrics import roc_auc_score
 from pyod.utils.utility import precision_n_scores
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedKFold
+
+from pyod.models.knn import KNN 
 
 pickle_dir = "D:\\Promotie\\formatted_OD_data"
 
@@ -48,16 +48,46 @@ class ODWrapper():
         return self
 
 
-#%% Define parameter settings for grid search:
-        
-#dict of tuples of methods:
-knn_parameters = {"n_neighbors": [1,2,3,4]}
-iforest_parameters = {"max_features": [1,2,3,4,5], "bootstrap": [True,False]}
-methods_params = {"KNN":{"method":KNN, "params":knn_parameters},
-                  "iforest":{"method":IForest, "params":iforest_parameters}}
+#%% Define parameter settings and methods for grid search:
+
+from pyod.models.abod import ABOD
+#from pyod.models.auto_encoder import AutoEncoder
+from pyod.models.knn import KNN 
+from pyod.models.iforest import IForest
+
+
+#define parameters for each method:
+abod_parameters = {"method":["fast"]}
+#autoencoder_parameters = {"hidden_neurons":[[64,32,32,64]], "hidden_activation":["relu"], "output_activation":["sigmoid"], "loss":} #include more options for detailed analysis!
+
+knn_parameters = {"n_neighbors":range(1,20)}
+iforest_parameters = {"max_features":[1,2,3,4,5], "bootstrap":[True, False]}
+
+#nested dict of methods and parameters
+methods_params = {
+        "ABOD": {"method":ABOD, "params":abod_parameters},
+        #"AutoEncoder": {"method":AutoEncoder, "params": autoencoder_parameters}
+        "KNN":{"method":KNN, "params":knn_parameters},
+        "iforest":{"method":IForest, "params":iforest_parameters}
+        }
     
 
-methods_params = without_keys(methods_params, "iforest")
+#%% test settings:
+#
+# methods_params = {
+#         "ABOD":{"method":ABOD, "params":abod_parameters}
+#         }
+
+methods_params = {
+        "iforest":{"method":IForest, "params":iforest_parameters}
+        }
+
+# methods_params = {
+#         "KNN":{"method":KNN, "params":knn_parameters}
+#         }
+
+
+picklefile_names = os.listdir(pickle_dir)[2:4]
 #%% loop over all data
 
 data_results = {}
