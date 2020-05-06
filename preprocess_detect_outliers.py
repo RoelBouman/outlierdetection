@@ -52,35 +52,56 @@ class ODWrapper():
 
 from pyod.models.abod import ABOD
 #from pyod.models.auto_encoder import AutoEncoder
+from pyod.models.cblof import CBLOF
+from pyod.models.cof import COF
+from pyod.models.hbos import HBOS
 from pyod.models.knn import KNN 
 from pyod.models.iforest import IForest
 
 
 #define parameters for each method:
+
 abod_parameters = {"method":["fast"]}
 #autoencoder_parameters = {"hidden_neurons":[[64,32,32,64]], "hidden_activation":["relu"], "output_activation":["sigmoid"], "loss":} #include more options for detailed analysis!
-
+cblof_parameters = {"n_clusters":[8,9], "alpha":[0.8,0.9], "beta":[4,5], "use_weights":[False, True]}
+cof_parameters = {"n_neighbors":[2,3]}
+hbos_parameters = {"n_bins":[10,20,30], "alpha":[0.1,0.2,0.3]}
 knn_parameters = {"n_neighbors":range(1,20)}
 iforest_parameters = {"max_features":[1,2,3,4,5], "bootstrap":[True, False]}
 
 #nested dict of methods and parameters
 methods_params = {
-        "ABOD": {"method":ABOD, "params":abod_parameters},
+        "ABOD":{"method":ABOD, "params":abod_parameters},
         #"AutoEncoder": {"method":AutoEncoder, "params": autoencoder_parameters}
+        "CBLOF":{"method":CBLOF, "params":cblof_parameters},
+        "COF":{"method":COF, "params":cof_parameters},
+        "HBOS":{"method":HBOS, "params":hbos_parameters},
         "KNN":{"method":KNN, "params":knn_parameters},
         "iforest":{"method":IForest, "params":iforest_parameters}
         }
     
 
-#%% test settings:
+ #%% test settings:
 #
 # methods_params = {
 #         "ABOD":{"method":ABOD, "params":abod_parameters}
 #         }
 
+# methods_params = {
+#         "cblof":{"method":CBLOF, "params":cblof_parameters}
+#         }
+
+# methods_params = {
+#         "cof":{"method":COF, "params":cof_parameters}
+#         }
+
 methods_params = {
-        "iforest":{"method":IForest, "params":iforest_parameters}
-        }
+        "HBOS":{"method":HBOS, "params":hbos_parameters},
+}
+
+# methods_params = {
+#         "iforest":{"method":IForest, "params":iforest_parameters}
+#         }
 
 # methods_params = {
 #         "KNN":{"method":KNN, "params":knn_parameters}
