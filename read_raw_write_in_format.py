@@ -23,7 +23,13 @@ for file_name in [f for f in matfile_names if f not in HDFlist and f not in blac
     full_path_filename = os.path.join(data_dir, file_name)
     mat_file = loadmat(full_path_filename)
     
-    data_dict = {"X": mat_file["X"], "y": mat_file["y"]}
+    X = mat_file["X"].astype(np.float64) 
+    y = mat_file["y"].astype(np.float64)
+    
+    (X_unique, unique_indices) = np.unique(X, axis=0, return_index=True)
+    y_unique = y[unique_indices]
+    
+    data_dict = {"X": X_unique, "y": y_unique}
     
     target_file_name = re.search('(.+?)\.mat', file_name).group(1) + ".pickle"
     target_file_name_with_dir = os.path.join(target_dir, target_file_name)
@@ -35,7 +41,13 @@ for file_name in HDFlist:
     full_path_filename = os.path.join(data_dir, file_name)
     mat_file = h5py.File(full_path_filename, 'r')
         
-    data_dict = {"X": mat_file["X"].value.T, "y": mat_file["y"].value.T}
+    X = mat_file["X"][()].T.astype(np.float64)
+    y = mat_file["y"][()].T.astype(np.float64)
+    
+    (X_unique, unique_indices) = np.unique(X, axis=0, return_index=True)
+    y_unique = y[unique_indices]
+    
+    data_dict = {"X": X_unique, "y": y_unique}    
     
     target_file_name = re.search('(.+?)\.mat', file_name).group(1) + ".pickle"
     target_file_name_with_dir = os.path.join(target_dir, target_file_name)
@@ -54,8 +66,11 @@ seismic_data = pd.DataFrame(seismic[0])
 cat_columns = ["seismic", "seismoacoustic", "shift", "ghazard", "class"]
 seismic_data_numerical = pd.get_dummies(seismic_data, prefix_sep="_", columns=cat_columns)
 
-X = seismic_data_numerical.values[:,:-2]
-y = seismic_data_numerical.values[:,-1] #can be made vector as they are complementary
+X = seismic_data_numerical.values[:,:-2].astype(np.float64)
+y = seismic_data_numerical.values[:,-1].astype(np.float64) #can be made vector as they are complementary
+
+(X_unique, unique_indices) = np.unique(X, axis=0, return_index=True)
+y_unique = y[unique_indices]
 
 data_dict = {"X": X, "y": y}
 
@@ -73,8 +88,10 @@ yeast = pd.read_csv(os.path.join(nonmat_data_dir, yeast_file_name), delim_whites
 X = yeast.iloc[:,1:9].values
 y = pd.get_dummies(yeast.iloc[:,9])[["CYT", "NUC", "MIT", "ME3"]].sum(axis=1).values
 
+(X_unique, unique_indices) = np.unique(X, axis=0, return_index=True)
+y_unique = y[unique_indices]
 
-data_dict = {"X": X, "y": y}
+data_dict = {"X": X.astype(np.float64), "y": y.astype(np.float64)}
 
 target_file_name = re.search('(.+?)\.data', yeast_file_name).group(1) + ".pickle"
 target_file_name_with_dir = os.path.join(target_dir, target_file_name)
