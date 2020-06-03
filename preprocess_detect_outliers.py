@@ -11,7 +11,7 @@ from sklearn.model_selection import StratifiedKFold
 
 from pyod.models.knn import KNN 
 
-pickle_dir = "D:\\Promotie\\formatted_OD_data"
+pickle_dir = "D:\\Promotie\\outlier_detection\\formatted_OD_data"
 
 picklefile_names = os.listdir(pickle_dir)
 
@@ -59,6 +59,14 @@ from pyod.models.iforest import IForest
 from pyod.models.knn import KNN 
 from pyod.models.lmdd import LMDD
 from pyod.models.loda import LODA
+from pyod.models.lof import LOF
+from pyod.models.loci import LOCI
+from pyod.models.mcd import MCD
+from pyod.models.ocsvm import OCSVM
+from pyod.models.pca import PCA
+from pyod.models.sod import SOD
+from pyod.models.sos import SOS
+
 
 real_metrics = ["cosine", "euclidean", "manhattan", "braycurtis", "canberra", "chebyshev", "correlation", "dice", "hamming", "jaccard", "kulsinski", "mahalanobis", "matching", "rogerstanimoto", "russellrao", "seuclidean", "sokalmichener", "sokalsneath", "sqeuclidean", "yule"]
 test_metrics = ['cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan', 'braycurtis', 'canberra', 'chebyshev',
@@ -78,6 +86,13 @@ iforest_parameters = {"n_estimators":[1000], "max_samples":[0.1,0.2,0.3,0.5,0.6,
 knn_parameters = {"n_neighbors":range(1,20), "method":["mean", "largest", "median"], "metric":test_metrics}
 lmdd_parameters = {"n_iter":[50,100,200], "dis_measure":["aad", "var", "iqr"]}
 loda_parameters = {"n_bins":[10,20,50,100,200], "random_cuts":[50,100,200,500]}
+lof_parameters = {"n_neighbors":range(1,20),"metric":test_metrics}
+loci_parameters = {"alpha": [0.3, 0.5, 0.7], "k":[2,3,4]}
+mcd_parameters = {"support_fraction":[None]}
+ocsvm_parameters = {"kernel": ["rbf", "poly", "sigmoid", "linear"]}
+pca_parameters = {"n_components":[0.2,0.4,0.6,0.8,1], "whiten":[True, False]}
+sod_parameters = {"n_components":[20,30,40], "ref_set":[5,10,20]}
+sos_parameters = {"perplexity":range(1,20), "metric":real_metrics}
 
 #nested dict of methods and parameters
 methods_params = {
@@ -90,10 +105,16 @@ methods_params = {
         "iforest":{"method":IForest, "params":iforest_parameters},
         "LMDD":{"method":LMDD, "params":lmdd_parameters},
         "LODA":{"method":LODA, "params":loda_parameters},
+        "LOF":{"method":LOF, "params":lof_parameters},
+        "LOCI":{"method":LOCI, "params":loci_parameters},
+        "MCD":{"method":MCD, "params":mcd_parameters},
+        "OCSVM":{"method":OCSVM, "params":ocsvm_parameters},
+        "PCA":{"method":PCA, "params":pca_parameters},
+        "SOD":{"method":SOD, "params":sod_parameters},
+        "SOS":{"method":SOS, "params":sos_parameters}
         }
     
-
- #%% test settings:
+   #%% test settings:
 #
 # methods_params = {
 #         "ABOD":{"method":ABOD, "params":abod_parameters}
@@ -119,14 +140,41 @@ methods_params = {
 #         "KNN":{"method":KNN, "params":knn_parameters}
 #         }
 
-methods_params = {
-        "LMDD":{"method":LMDD, "params":lmdd_parameters},
-}
+# methods_params = {
+#         "LMDD":{"method":LMDD, "params":lmdd_parameters},
+# }
+
+# methods_params = {
+#         "LODA":{"method":LODA, "params":loda_parameters},
+# }
+
+# methods_params = {
+#         "LOF":{"method":LOF, "params":lof_parameters},
+# }
+
+# methods_params = {
+#         "LOCI":{"method":LOCI, "params":loci_parameters},
+# }
+
+# methods_params = {
+#         "MCD":{"method":MCD, "params":mcd_parameters},
+# }
+
+# methods_params = {
+#         "OCSVM":{"method":OCSVM, "params":ocsvm_parameters},
+# }
+
+# methods_params = {
+#         "PCA":{"method":PCA, "params":pca_parameters},
+# }
+
+# methods_params = {
+#         "SOD":{"method":SOD, "params":sod_parameters},
+# }
 
 methods_params = {
-        "LODA":{"method":LODA, "params":loda_parameters},
+        "SOS":{"method":SOS, "params":sos_parameters},
 }
-
 
 picklefile_names = os.listdir(pickle_dir)[2:4]
 #%% loop over all data
