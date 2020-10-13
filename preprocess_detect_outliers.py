@@ -191,10 +191,7 @@ data_results = {}
 for picklefile_name in picklefile_names:
     
     #check if data path exists, and make it if it doesn't
-    target_dir = os.path.join(result_dir, picklefile_name.replace(".pickle", ""))
-    
-    if not os.path.exists(target_dir):
-        os.makedirs(target_dir)
+
     
     #print name for reporting purpose
     print(picklefile_name)
@@ -206,7 +203,10 @@ for picklefile_name in picklefile_names:
     
     #loop over all methods:
     for method, settings in methods_params.items():
-        
+        target_dir = os.path.join(result_dir, picklefile_name.replace(".pickle", ""), method)
+    
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
         print("______"+method)
         
         skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state)
@@ -220,7 +220,7 @@ for picklefile_name in picklefile_names:
         
             print("Fold: " + str(i))
             
-            target_file_name = os.path.join(target_dir, method+"_fold_"+str(i)+".pickle")
+            target_file_name = os.path.join(target_dir,"fold_"+str(i)+".pickle")
             #check if file exists and is non-empty
             if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
                 print("results already calculated, skipping recalculation")
@@ -256,6 +256,6 @@ for picklefile_name in picklefile_names:
                     
                     best_results[scorer_name] = {"best_params":best_params, "scorer_name":scorer_name, scorer_name:score}
                
-                with open(os.path.join(target_dir, method+"_fold_"+str(i)+"_best_param_scores.pickle"), 'wb') as handle:
+                with open(os.path.join(target_dir, "fold_"+str(i)+"_best_param_scores.pickle"), 'wb') as handle:
                     pickle.dump(best_results, handle, protocol=pickle.HIGHEST_PROTOCOL)
 #maak custom functions voor score
