@@ -4,7 +4,7 @@ import os
 import numpy as np
 import pandas as pd
 from sklearn.metrics import make_scorer
-#from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score
 from pyod.utils.utility import precision_n_scores
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedKFold
@@ -19,9 +19,11 @@ result_dir = "D:\\Promotie\\outlier_detection\\result_dir"
 picklefile_names = os.listdir(pickle_dir)
 
 #define score function:
-scorer = make_scorer(precision_n_scores)
-#scorer = make_scorer(roc_auc_score)
+p_at_n_scorer = make_scorer(precision_n_scores)
+roc_auc_scorer = make_scorer(roc_auc_score)
 
+scorers = {"p@n": p_at_n_scorer, "ROC/AUC": roc_auc_scorer}
+scorer_functions = {"p@n": precision_n_scores, "ROC/AUC": roc_auc_score}
 #%%
 def without_keys(d, keys):
     return {k: v for k, v in d.items() if k not in keys}
@@ -182,6 +184,8 @@ methods_params = {
 #picklefile_names = os.listdir(pickle_dir)[2:4]
 #%% loop over all data, but do not reproduce existing results
 
+random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
+
 data_results = {}
 
 for picklefile_name in picklefile_names:
@@ -201,28 +205,57 @@ for picklefile_name in picklefile_names:
     X, y = data["X"], np.squeeze(data["y"])
     
     #loop over all methods:
-    CV_results = {}
     for method, settings in methods_params.items():
         
         print("______"+method)
         
-        target_file_name = os.path.join(target_dir, method+".pickle")
-        #check if file exists and is non-empty
-        if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
-            print("results already calculated, skipping recalculation")
-        else:
-            clf = ODWrapper(settings["method"]())
-            pipeline = make_pipeline(RobustScaler(), clf)
+        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state)
+        
+        all_folds = [test_fold for train_fold, test_fold in skf.split(X,y)]
+        for i, (inner_index, test_index) in enumerate(skf.split(X,y)):
+            inner_folds = [fold for j, fold in enumerate(all_folds) if j!=i] #inner folds will be used for K-1 fold cross validation in gridsearchCV
+        
+            X_inner, y_inner = X[inner_index], y[inner_index]
+            X_test, y_test = X[test_index], y[test_index]           
+        
+            print("Fold: " + str(i))
             
-            clf_settings = dict()
-            for key in settings["params"].keys():
-                clf_settings["odwrapper__"+key] = settings["params"][key]
+            target_file_name = os.path.join(target_dir, method+"_fold_"+str(i)+".pickle")
+            #check if file exists and is non-empty
+            if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
+                print("results already calculated, skipping recalculation")
+            else:
+                
+                clf = ODWrapper(settings["method"]())
+                pipeline = make_pipeline(RobustScaler(), clf)
+                        
+                clf_settings = dict()
+                for key in settings["params"].keys():
+                    clf_settings["odwrapper__"+key] = settings["params"][key]
             
-            gridsearch = GridSearchCV(pipeline, clf_settings, scoring=scorer, cv = StratifiedKFold(n_splits=5,shuffle=True), return_train_score=False)
-            gridsearch.fit(X, y)
+                CV_split = [(np.concatenate(inner_folds[:k]+inner_folds[k+1:]),test_index) for k, test_index in enumerate(inner_folds)]
+                
+                #We need to manually refit the algorithms with the optimal hyperparameters for both metrics, this is easier than relying on refit for parts.
+                gridsearch = GridSearchCV(pipeline, clf_settings, scoring=scorers, cv = CV_split, return_train_score=False, n_jobs=4, refit=False, verbose=1)
+                gridsearch.fit(X, y) #CV_split ensures the folds will be handled properly, so we can pass the entire X and y matrices, we manually refit to avoid fitting parts of the data we can't use.
             
-            #CV_results[method] = pd.DataFrame(gridsearch.cv_results_)
-            with open(target_file_name, 'wb') as handle:
-                pickle.dump(pd.DataFrame(gridsearch.cv_results_), handle, protocol=pickle.HIGHEST_PROTOCOL)
-
+                cv_results = pd.DataFrame(gridsearch.cv_results_)
+                with open(target_file_name, 'wb') as handle:
+                    pickle.dump(cv_results, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                
+                #Evaluate best models according to metrics on test set:
+                best_results = {}
+                for scorer_name in scorer_functions.keys():                        
+                    best_params = cv_results["params"][cv_results["rank_test_"+scorer_name]==1].iloc[0]
+                    best_clf = ODWrapper(settings["method"]())
+                    best_clf.set_params(**best_params)
+                    pipeline = make_pipeline(RobustScaler(), best_clf)
+                    pipeline.fit(X_inner, y_inner)
+                    y_test_pred = pipeline.predict(X_test)
+                    score = scorer_functions[scorer_name](y_test,y_test_pred)
+                    
+                    best_results[scorer_name] = {"best_params":best_params, "scorer_name":scorer_name, scorer_name:score}
+               
+                with open(os.path.join(target_dir, method+"_fold_"+str(i)+"_best_param_scores.pickle"), 'wb') as handle:
+                    pickle.dump(best_results, handle, protocol=pickle.HIGHEST_PROTOCOL)
 #maak custom functions voor score
