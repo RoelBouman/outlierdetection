@@ -12,7 +12,7 @@ data_names = os.listdir(result_dir)
 method_names = [x.replace(".pickle", "") for x in os.listdir(os.path.join(result_dir, data_names[0]))]
 
 
-for data_name in data_names[:6]:
+for data_name in data_names:
     
     mean_precision = np.zeros((len(method_names)))
     range_precision = np.zeros((2,len(method_names)))
@@ -32,7 +32,7 @@ for data_name in data_names[:6]:
     plt.figure()
     #plt.bar(range(len(method_names)), mean_precision, yerr = range_precision, tick_label = method_names)
     plt.bar(range(len(method_names)), mean_precision, yerr = quantiles_precision, tick_label = method_names, capsize=6)
-    plt.errorbar(range(len(method_names)), mean_precision, kwargs)
+    plt.errorbar(range(len(method_names)), mean_precision, fmt="none" )
     plt.title(data_name)
     plt.xticks(rotation=45)
     plt.savefig(os.path.join(figure_dir,data_name))
