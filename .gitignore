@@ -6,3 +6,4 @@ figures/
 result_dir/
 
 old/
+*.pyc
