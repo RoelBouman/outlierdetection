@@ -10,6 +10,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import RobustScaler
+from evaluation_metrics import adjusted_precision_n_scores, average_precision, adjusted_average_precision
 
 from pyod.models.knn import KNN 
 
@@ -19,11 +20,14 @@ result_dir = "D:\\Promotie\\outlier_detection\\result_dir"
 picklefile_names = os.listdir(pickle_dir)
 
 #define score function:
-p_at_n_scorer = make_scorer(precision_n_scores)
+R_precision = make_scorer(precision_n_scores)
 roc_auc_scorer = make_scorer(roc_auc_score)
+adjusted_R_precision_scorer = make_scorer(adjusted_precision_n_scores)
+average_precision_scorer = make_scorer(average_precision)
+adjusted_average_precision_scorer = make_scorer(adjusted_average_precision)
 
-scorers = {"p@n": p_at_n_scorer, "ROC/AUC": roc_auc_scorer}
-scorer_functions = {"p@n": precision_n_scores, "ROC/AUC": roc_auc_score}
+scorers = {"R_precision": R_precision, "ROC/AUC": roc_auc_scorer, "adjusted_R_precision": adjusted_R_precision_scorer, "average_precision": average_precision_scorer, "adjusted_average_precision": adjusted_R_precision_scorer}
+scorer_functions = {"R_precision": precision_n_scores, "ROC/AUC": roc_auc_score, "adjusted_R_precision": adjusted_precision_n_scores, "average_precision": average_precision, "adjusted_average_precision": adjusted_average_precision}
 #%%
 def without_keys(d, keys):
     return {k: v for k, v in d.items() if k not in keys}
@@ -236,7 +240,7 @@ for picklefile_name in picklefile_names:
                 CV_split = [(np.concatenate(inner_folds[:k]+inner_folds[k+1:]),test_index) for k, test_index in enumerate(inner_folds)]
                 
                 #We need to manually refit the algorithms with the optimal hyperparameters for both metrics, this is easier than relying on refit for parts.
-                gridsearch = GridSearchCV(pipeline, clf_settings, scoring=scorers, cv = CV_split, return_train_score=False, n_jobs=4, refit=False, verbose=1)
+                gridsearch = GridSearchCV(pipeline, clf_settings, scoring=scorers, cv = CV_split, return_train_score=False, n_jobs=7, refit=False, verbose=1)
                 gridsearch.fit(X, y) #CV_split ensures the folds will be handled properly, so we can pass the entire X and y matrices, we manually refit to avoid fitting parts of the data we can't use.
             
                 cv_results = pd.DataFrame(gridsearch.cv_results_)
@@ -258,4 +262,3 @@ for picklefile_name in picklefile_names:
                
                 with open(os.path.join(target_dir, "fold_"+str(i)+"_best_param_scores.pickle"), 'wb') as handle:
                     pickle.dump(best_results, handle, protocol=pickle.HIGHEST_PROTOCOL)
-#maak custom functions voor score
