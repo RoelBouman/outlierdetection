@@ -8,9 +8,12 @@ import os
 import pickle
 import re
 
-data_dir = "D:\\Promotie\\ODDS_data_raw\\matfile_data"
-nonmat_data_dir = "D:\\Promotie\\ODDS_data_raw\\other_data"
-target_dir = "D:\\Promotie\\formatted_OD_data"
+data_dir = "ODDS_data_raw/matfile_data"
+nonmat_data_dir = "ODDS_data_raw/other_data"
+target_dir = "formatted_OD_data"
+
+if not os.path.exists(target_dir):
+    os.mkdir(target_dir)
 
 matfile_names = os.listdir(data_dir)
 
