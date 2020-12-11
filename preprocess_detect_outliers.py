@@ -14,8 +14,8 @@ from evaluation_metrics import adjusted_precision_n_scores, average_precision, a
 
 from pyod.models.knn import KNN 
 
-pickle_dir = "D:\\Promotie\\outlier_detection\\formatted_OD_data"
-result_dir = "D:\\Promotie\\outlier_detection\\result_dir"
+pickle_dir = "formatted_OD_data"
+result_dir = "result_dir"
 
 picklefile_names = os.listdir(pickle_dir)
 
