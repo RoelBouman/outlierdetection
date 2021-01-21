@@ -15,7 +15,7 @@ from evaluation_metrics import adjusted_precision_n_scores, average_precision, a
 from pyod.models.knn import KNN 
 
 pickle_dir = "formatted_OD_data"
-result_dir = "result_dir"
+result_dir = os.path.join("result_dir", "semisupervised")
 
 picklefile_names = os.listdir(pickle_dir)
 
@@ -86,10 +86,11 @@ real_metrics = ["euclidean","cosine" ,"chebyshev" , "correlation", "rogerstanimo
 
 #define parameters for each method:
 
-abod_parameters = {"method":["fast"]}
+abod_parameters = {"method":["fast"], "n_neighbors":[40]}
 #autoencoder_parameters = {"hidden_neurons":[[64,32,32,64]], "hidden_activation":["relu"], "output_activation":["sigmoid"], "loss":} #include more options for detailed analysis!
 cblof_parameters = {"n_clusters":[8,9], "alpha":[0.8,0.9], "beta":[4,5], "use_weights":[False, True]}
 cof_parameters = {"n_neighbors":[2,3]}
+#COPOD
 hbos_parameters = {"n_bins":[10,20,30], "alpha":[0.1,0.2,0.3]}
 iforest_parameters = {"n_estimators":[1000], "max_samples":[0.1,0.2,0.3,0.5,0.6,0.7,0.8,0.9,1.0],  "max_features":[0.1,0.2,0.3,0.5,0.6,0.7,0.8,0.9,1.0], "bootstrap":[True, False]}
 knn_parameters = {"n_neighbors":range(1,20), "method":["mean", "largest", "median"], "metric":real_metrics}
@@ -98,6 +99,7 @@ loda_parameters = {"n_bins":[10,20,50,100,200], "random_cuts":[50,100,200,500]}
 lof_parameters = {"n_neighbors":range(1,20),"metric":real_metrics}
 loci_parameters = {"alpha": [0.3, 0.5, 0.7], "k":[2,3,4]}
 mcd_parameters = {"support_fraction":[None]}
+#mo_gaal
 ocsvm_parameters = {"kernel": ["rbf", "poly", "sigmoid", "linear"]}
 pca_parameters = {"n_components":[0.2,0.4,0.6,0.8,1], "whiten":[True, False]}
 sod_parameters = {"n_components":[20,30,40], "ref_set":[5,10,19], "alpha":[0.2,0.4,0.6,0.8,0.9]}
@@ -107,18 +109,18 @@ sos_parameters = {"perplexity":range(1,10), "metric":real_metrics}
 methods_params = {
         "ABOD":{"method":ABOD, "params":abod_parameters},
         #"AutoEncoder":{"method":AutoEncoder, "params":autoencoder_parameters},
-        "CBLOF":{"method":CBLOF, "params":cblof_parameters},
+        #"CBLOF":{"method":CBLOF, "params":cblof_parameters},
         #"COF":{"method":COF, "params":cof_parameters},
-        "HBOS":{"method":HBOS, "params":hbos_parameters},
-        "KNN":{"method":KNN, "params":knn_parameters},
-        "iforest":{"method":IForest, "params":iforest_parameters},
+        #"HBOS":{"method":HBOS, "params":hbos_parameters},
+        #"KNN":{"method":KNN, "params":knn_parameters},
+        #"iforest":{"method":IForest, "params":iforest_parameters},
         #"LMDD":{"method":LMDD, "params":lmdd_parameters},
-        "LODA":{"method":LODA, "params":loda_parameters},
-        "LOF":{"method":LOF, "params":lof_parameters},
+        #"LODA":{"method":LODA, "params":loda_parameters},
+        #"LOF":{"method":LOF, "params":lof_parameters},
         #"LOCI":{"method":LOCI, "params":loci_parameters},
-        "MCD":{"method":MCD, "params":mcd_parameters},
-        "OCSVM":{"method":OCSVM, "params":ocsvm_parameters},
-        "PCA":{"method":PCA, "params":pca_parameters},
+        #"MCD":{"method":MCD, "params":mcd_parameters},
+        #"OCSVM":{"method":OCSVM, "params":ocsvm_parameters},
+        #"PCA":{"method":PCA, "params":pca_parameters},
         #"SOD":{"method":SOD, "params":sod_parameters},
         #"SOS":{"method":SOS, "params":sos_parameters}
         }
@@ -240,7 +242,7 @@ for picklefile_name in picklefile_names:
                 CV_split = [(np.concatenate(inner_folds[:k]+inner_folds[k+1:]),test_index) for k, test_index in enumerate(inner_folds)]
                 
                 #We need to manually refit the algorithms with the optimal hyperparameters for both metrics, this is easier than relying on refit for parts.
-                gridsearch = GridSearchCV(pipeline, clf_settings, scoring=scorers, cv = CV_split, return_train_score=False, n_jobs=7, refit=False, verbose=1)
+                gridsearch = GridSearchCV(pipeline, clf_settings, scoring=scorers, cv = CV_split, return_train_score=False, refit=False, verbose=1) #, n_jobs=7,
                 gridsearch.fit(X, y) #CV_split ensures the folds will be handled properly, so we can pass the entire X and y matrices, we manually refit to avoid fitting parts of the data we can't use.
             
                 cv_results = pd.DataFrame(gridsearch.cv_results_)
@@ -251,8 +253,9 @@ for picklefile_name in picklefile_names:
                 best_results = {}
                 for scorer_name in scorer_functions.keys():                        
                     best_params = cv_results["params"][cv_results["rank_test_"+scorer_name]==1].iloc[0]
+                    best_params = {key.replace("odwrapper__",""): val for key, val in best_params.items()}
                     best_clf = ODWrapper(settings["method"]())
-                    best_clf.set_params(**best_params)
+                    best_clf = best_clf.set_params(**best_params)
                     pipeline = make_pipeline(RobustScaler(), best_clf)
                     pipeline.fit(X_inner, y_inner)
                     y_test_pred = pipeline.predict(X_test)
