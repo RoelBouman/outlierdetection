@@ -61,7 +61,7 @@ class ODWrapper():
 
 from pyod.models.abod import ABOD
 #from pyod.models.auto_encoder import AutoEncoder
-from pyod.models.cblof import CBLOF
+#from pyod.models.cblof import CBLOF
 from pyod.models.cof import COF
 from pyod.models.hbos import HBOS
 from pyod.models.iforest import IForest
@@ -88,11 +88,10 @@ real_metrics = ["euclidean", "manhattan", "cityblock"]
 
 abod_parameters = {"method":["fast"], "n_neighbors":[40]}
 #autoencoder_parameters = {"hidden_neurons":[[64,32,32,64]], "hidden_activation":["relu"], "output_activation":["sigmoid"], "loss":} #include more options for detailed analysis!
-#cblof_parameters = {"n_clusters":[8,9], "alpha":[0.8,0.9], "beta":[4,5], "use_weights":[False, True]}
 #cof_parameters = {"n_neighbors":[2,3]}
 #COPOD
 #hbos_parameters = {"n_bins":[10,20,30], "alpha":[0.1,0.2,0.3]}
-#iforest_parameters = {"n_estimators":[1000], "max_samples":[0.1,0.2,0.3,0.5,0.6,0.7,0.8,0.9,1.0],  "max_features":[0.1,0.2,0.3,0.5,0.6,0.7,0.8,0.9,1.0], "bootstrap":[True, False]}
+#iforest_parameters = {"n_estimators":[1000]}
 #knn_parameters = {"n_neighbors":range(1,20), "method":["mean", "largest", "median"], "metric":real_metrics}
 #lmdd_parameters = {"n_iter":[50,100,200], "dis_measure":["aad", "var", "iqr"]}
 #loda_parameters = {"n_bins":[10,20,50,100,200], "random_cuts":[50,100,200,500]}
