@@ -77,7 +77,7 @@ from pyod.models.sod import SOD
 from pyod.models.sos import SOS
 
 
-real_metrics = ["euclidean", "manhattan", "cityblock"]
+real_metrics = ["euclidean"]
 # test_metrics = ['cityblock', 'cosine', 'euclidean', 'l1', 'l2', 'manhattan', 'braycurtis', 'canberra', 'chebyshev',
 #           'correlation', 'dice', 'hamming', 'jaccard', 'kulsinski',
 #           'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto',
@@ -90,9 +90,9 @@ abod_parameters = {"method":["fast"], "n_neighbors":[40]}
 #autoencoder_parameters = {"hidden_neurons":[[64,32,32,64]], "hidden_activation":["relu"], "output_activation":["sigmoid"], "loss":} #include more options for detailed analysis!
 #cof_parameters = {"n_neighbors":[2,3]}
 #COPOD
-#hbos_parameters = {"n_bins":[10,20,30], "alpha":[0.1,0.2,0.3]}
+#hbos_parameters = {"n_bins":[100], "alpha":[0.1]}
 #iforest_parameters = {"n_estimators":[1000]}
-#knn_parameters = {"n_neighbors":range(1,20), "method":["mean", "largest", "median"], "metric":real_metrics}
+#knn_parameters = {"n_neighbors":range(2,5,10,20), "method":["largest"], "metric":real_metrics}
 #lmdd_parameters = {"n_iter":[50,100,200], "dis_measure":["aad", "var", "iqr"]}
 #loda_parameters = {"n_bins":[10,20,50,100,200], "random_cuts":[50,100,200,500]}
 #lof_parameters = {"n_neighbors":range(1,40),"metric":real_metrics}
