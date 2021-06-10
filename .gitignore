@@ -7,3 +7,5 @@ result_dir/
 
 old/
 *.pyc
+
+csvresult_dir/

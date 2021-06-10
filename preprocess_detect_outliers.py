@@ -8,9 +8,11 @@ from pyod.utils.utility import precision_n_scores
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import RobustScaler
 from evaluation_metrics import adjusted_precision_n_scores, average_precision, adjusted_average_precision
+from joblib import Parallel, delayed
 
 pickle_dir = "formatted_OD_data"
 result_dir = "result_dir"
+csvresult_dir = "csvresult_dir"
 
 picklefile_names = os.listdir(pickle_dir)
 
@@ -59,10 +61,20 @@ methods = {
 #%% loop over all data, but do not reproduce existing results
 
 
+
+#%% define calculation function for parallelization:
+
+#make pickle file directory
 target_dir = os.path.join(result_dir)
 
 if not os.path.exists(target_dir):
     os.makedirs(target_dir)
+    
+#make csv directory
+target_csvdir = os.path.join(csvresult_dir)
+
+if not os.path.exists(target_csvdir):
+    os.makedirs(target_csvdir)
     
 for picklefile_name in picklefile_names:
     
@@ -77,26 +89,38 @@ for picklefile_name in picklefile_names:
     data = pickle.load(open(full_path_filename, 'rb'))
     X, y = data["X"], np.squeeze(data["y"])
                     
-    target_file_name = os.path.join(target_dir, picklefile_name.replace(".pickle", "_results.pickle"))
     
-    #check if file exists and is non-empty
-    if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
-        print("results already calculated, skipping recalculation")
-    else:
-        #loop over all methods:
-        method_performance = {}
-        for method_name, OD_method in methods.items():
-            print(method_name)
-                
-            pipeline = make_pipeline(RobustScaler(), OD_method)
+    
+    #check which files exists and are non-empty
+    calculated_methods = []
+    for method_name, _ in methods.items():
+        target_file_name = os.path.join(target_dir, picklefile_name.replace(".pickle", "_"+method_name+"_results.pickle"))
+        if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
+            print(method_name + " results already calculated, skipping recalculation")
+            calculated_methods.append(method_name)
+
+    for method_name in calculated_methods:
+        methods.pop(method_name)
+            
+    #loop over all methods:
+
+    for method_name, OD_method in methods.items():
+        print("starting " + method_name)
+            
+        pipeline = make_pipeline(RobustScaler(), OD_method)
+    
+        pipeline.fit(X)
         
-            pipeline.fit(X)
-            
-            outlier_scores = pipeline[1].decision_scores_
-            
-            method_performance[method_name] = {score_name: score_function(y,outlier_scores) for (score_name, score_function) in score_functions.items()}
+        outlier_scores = pipeline[1].decision_scores_
+        
+        method_performance = {method_name:{score_name: score_function(y,outlier_scores) for (score_name, score_function) in score_functions.items()}}
         method_performance_df = pd.DataFrame(method_performance).transpose()
-                
+            
+        target_file_name = os.path.join(target_dir, picklefile_name.replace(".pickle", "_"+method_name+"_results.pickle"))
         with open(target_file_name, 'wb') as handle:
             pickle.dump(method_performance_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
-            
+        
+        #also write csv files for easy manual inspection
+        target_csvfile_name = os.path.join(target_csvdir, picklefile_name.replace(".pickle", "_"+method_name+"_results.csv"))
+        method_performance_df.to_csv(target_csvfile_name)
+        print("finished: " + method_name)
