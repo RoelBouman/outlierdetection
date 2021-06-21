@@ -8,7 +8,6 @@ from pyod.utils.utility import precision_n_scores
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import RobustScaler
 from evaluation_metrics import adjusted_precision_n_scores, average_precision, adjusted_average_precision
-from joblib import Parallel, delayed
 
 pickle_dir = "formatted_OD_data"
 result_dir = "result_dir"
@@ -29,7 +28,7 @@ from pyod.models.knn import KNN
 from pyod.models.lmdd import LMDD
 #from pyod.models.loda import LODA #needs auto-histogram width selection
 #from pyod.models.lof import LOF #first needs a robust k-choice mechanism
-from pyod.models.loci import LOCI
+#from pyod.models.loci import LOCI #LOCI is horrendously slow. (O(n3)), aLOCI might be a decent approach, but are there implementations?
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
@@ -43,14 +42,14 @@ random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
 #nested dict of methods and parameters
 methods = {
         "ABOD":ABOD(method="fast", n_neighbors=40), 
-        "COF":COF(n_neighbors=20),
+        "COF_new":COF(n_neighbors=20),
         #"HBOS":,
         "kNN":KNN(n_neighbors=20,method="mean", metric="euclidean"),
         "Isolation Forest":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
         "LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state), #aad is the same as the MAD
         #"LODA":,
         #"LOF":,
-        "LOCI":LOCI(alpha=0.5, k=3), #in contrast to the paper, delta is called k in PyOD. Similarly, it uses the default of (paper notation) k=20, which cannot be altered.
+        #"LOCI":LOCI(alpha=0.5, k=3), #in contrast to the paper, delta is called k in PyOD. Similarly, it uses the default of (paper notation) k=20, which cannot be altered.
         "MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
         "OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
         "PCA":PCA(n_components=0.5, random_state=random_state), 
@@ -98,13 +97,14 @@ for picklefile_name in picklefile_names:
         if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
             print(method_name + " results already calculated, skipping recalculation")
             calculated_methods.append(method_name)
-
+            
+    missing_methods = methods.copy()
     for method_name in calculated_methods:
-        methods.pop(method_name)
+        missing_methods.pop(method_name)
             
     #loop over all methods:
 
-    for method_name, OD_method in methods.items():
+    for method_name, OD_method in missing_methods.items():
         print("starting " + method_name)
             
         pipeline = make_pipeline(RobustScaler(), OD_method)
