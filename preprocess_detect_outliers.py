@@ -13,7 +13,14 @@ pickle_dir = "formatted_OD_data"
 result_dir = "result_dir"
 csvresult_dir = "csvresult_dir"
 
-picklefile_names = os.listdir(pickle_dir)
+#picklefile_names = os.listdir(pickle_dir)
+
+#sort picklefile_names based on size: https://stackoverflow.com/questions/20252669/get-files-from-directory-argument-sorting-by-size
+# make a generator for all file paths within dirpath
+all_files = ( os.path.join(basedir, filename) for basedir, dirs, files in os.walk(pickle_dir) for filename in files   )
+sorted_files = sorted(all_files, key = os.path.getsize)
+picklefile_names = [filename.replace(pickle_dir+"/","") for filename in sorted_files]
+
 
 #define score function:
 score_functions = {"ROC/AUC": roc_auc_score, "R_precision": precision_n_scores, "adjusted_R_precision": adjusted_precision_n_scores, "average_precision": average_precision, "adjusted_average_precision": adjusted_average_precision}
@@ -42,7 +49,7 @@ random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
 #nested dict of methods and parameters
 methods = {
         "ABOD":ABOD(method="fast", n_neighbors=40), 
-        "COF_new":COF(n_neighbors=20),
+        "COF":COF(n_neighbors=20),
         #"HBOS":,
         "kNN":KNN(n_neighbors=20,method="mean", metric="euclidean"),
         "Isolation Forest":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
