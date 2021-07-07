@@ -9,3 +9,11 @@ old/
 *.pyc
 
 csvresult_dir/
+
+speed_result_dir/
+
+csvresult_dir_old/
+
+result_dir_old/
+
+score_dir/

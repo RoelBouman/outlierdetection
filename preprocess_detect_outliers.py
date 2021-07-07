@@ -12,6 +12,7 @@ from evaluation_metrics import adjusted_precision_n_scores, average_precision, a
 pickle_dir = "formatted_OD_data"
 result_dir = "result_dir"
 csvresult_dir = "csvresult_dir"
+score_dir = "score_dir"
 
 #picklefile_names = os.listdir(pickle_dir)
 
@@ -40,7 +41,7 @@ from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
 from pyod.models.sod import SOD
-from pyod.models.sos import SOS
+#from pyod.models.sos import SOS #SOS also has memory allocation issues.
 
 
 random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
@@ -60,8 +61,8 @@ methods = {
         "MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
         "OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
         "PCA":PCA(n_components=0.5, random_state=random_state), 
-        "SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8),
-        "SOS":SOS(perplexity=4.5, metric="euclidean")
+        "SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8)#,
+        #"SOS":SOS(perplexity=4.5, metric="euclidean")
         }
 
 #%% loop over all data, but do not reproduce existing results
@@ -81,6 +82,13 @@ target_csvdir = os.path.join(csvresult_dir)
 
 if not os.path.exists(target_csvdir):
     os.makedirs(target_csvdir)
+    
+    
+#make outlier scores direcetory
+score_csvdir = os.path.join(score_dir)
+
+if not os.path.exists(score_csvdir):
+    os.makedirs(score_csvdir)
     
 for picklefile_name in picklefile_names:
     
@@ -131,3 +139,7 @@ for picklefile_name in picklefile_names:
         target_csvfile_name = os.path.join(target_csvdir, picklefile_name.replace(".pickle", "_"+method_name+"_results.csv"))
         method_performance_df.to_csv(target_csvfile_name)
         print("finished: " + method_name)
+        
+        #write scores and labels
+        target_file_name = os.path.join(score_csvdir, picklefile_name.replace(".pickle", "_"+method_name+"_scores.csv"))
+        np.savetxt(target_file_name, outlier_scores)
