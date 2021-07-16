@@ -124,4 +124,8 @@ plt.xticks(rotation=45)
 plt.show()
 
 #%% Plot performance for data set size
-#%% Plot correlations between method results (will need saved outlier scores)
+#%% Plot correlations between method results
+
+sns.pairplot(metric_dfs["ROC/AUC"].transpose())
+
+correlation_matrix = metric_dfs["ROC/AUC"].transpose().astype(float).corr()
