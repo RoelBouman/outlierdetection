@@ -30,12 +30,12 @@ score_functions = {"ROC/AUC": roc_auc_score, "R_precision": precision_n_scores, 
 
 from pyod.models.abod import ABOD
 from pyod.models.cof import COF
-from pyod.models.hbos import HBOS #needs auto-histogram width selection
+from pyod.models.hbos import HBOS
 from pyod.models.iforest import IForest
 from pyod.models.knn import KNN 
 from pyod.models.lmdd import LMDD
-from pyod.models.loda import LODA #needs auto-histogram width selection
-from pyod.models.lof import LOF #first needs a robust k-choice mechanism
+from pyod.models.loda import LODA
+from pyod.models.lof import LOF
 #from pyod.models.loci import LOCI #LOCI is horrendously slow. (O(n3)), aLOCI might be a decent approach, but are there implementations?
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
@@ -43,7 +43,7 @@ from pyod.models.pca import PCA
 from pyod.models.sod import SOD
 #from pyod.models.sos import SOS #SOS also has memory allocation issues.
 from pyod.models.ensemble import Ensemble
-from pyod.models.combination import maximization, aom
+from pyod.models.combination import maximization
 
 
 random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
@@ -60,7 +60,7 @@ methods = {
         #"LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state), #aad is the same as the MAD
         #"LODA":LODA(n_bins="auto"),
         #"LODAdefault":LODA(),
-        "LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(10,21)], combination_function=aom, method="dynamic")
+        "LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(10,21)], combination_function=maximization)
         #"LOCI":LOCI(alpha=0.5, k=3), #in contrast to the paper, delta is called k in PyOD. Similarly, it uses the default of (paper notation) k=20, which cannot be altered.
         #"MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
         #"OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
