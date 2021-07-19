@@ -20,7 +20,7 @@ score_dir = "score_dir"
 # make a generator for all file paths within dirpath
 all_files = ( os.path.join(basedir, filename) for basedir, dirs, files in os.walk(pickle_dir) for filename in files   )
 sorted_files = sorted(all_files, key = os.path.getsize)
-picklefile_names = [filename.replace(pickle_dir+"/","") for filename in sorted_files]
+picklefile_names = [filename.replace(pickle_dir+os.path.sep,"") for filename in sorted_files]
 
 
 #define score function:
@@ -35,13 +35,15 @@ from pyod.models.iforest import IForest
 from pyod.models.knn import KNN 
 from pyod.models.lmdd import LMDD
 from pyod.models.loda import LODA #needs auto-histogram width selection
-#from pyod.models.lof import LOF #first needs a robust k-choice mechanism
+from pyod.models.lof import LOF #first needs a robust k-choice mechanism
 #from pyod.models.loci import LOCI #LOCI is horrendously slow. (O(n3)), aLOCI might be a decent approach, but are there implementations?
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
 from pyod.models.sod import SOD
 #from pyod.models.sos import SOS #SOS also has memory allocation issues.
+from pyod.models.ensemble import Ensemble
+from pyod.models.combination import maximization, aom
 
 
 random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
@@ -49,21 +51,21 @@ random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
 
 #nested dict of methods and parameters
 methods = {
-        "ABOD":ABOD(method="fast", n_neighbors=40), 
-        "COF":COF(n_neighbors=20),
-        "HBOSdefault":HBOS(),
-        "HBOS":HBOS(n_bins="auto"),
-        "kNN":KNN(n_neighbors=20,method="mean", metric="euclidean"),
-        "Isolation Forest":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
-        "LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state), #aad is the same as the MAD
-        "LODA":LODA(n_bins="auto"),
-        "LODAdefault":LODA(),
-        #"LOF":,
+        #"ABOD":ABOD(method="fast", n_neighbors=40), 
+        #"COF":COF(n_neighbors=20),
+        #"HBOSdefault":HBOS(),
+        #"HBOS":HBOS(n_bins="auto"),
+        #"kNN":KNN(n_neighbors=20,method="mean", metric="euclidean"),
+        #"Isolation Forest":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
+        #"LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state), #aad is the same as the MAD
+        #"LODA":LODA(n_bins="auto"),
+        #"LODAdefault":LODA(),
+        "LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(10,21)], combination_function=aom, method="dynamic")
         #"LOCI":LOCI(alpha=0.5, k=3), #in contrast to the paper, delta is called k in PyOD. Similarly, it uses the default of (paper notation) k=20, which cannot be altered.
-        "MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
-        "OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
-        "PCA":PCA(n_components=0.5, random_state=random_state), 
-        "SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8)#,
+        #"MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
+        #"OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
+        #"PCA":PCA(n_components=0.5, random_state=random_state), 
+        #"SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8)#,
         #"SOS":SOS(perplexity=4.5, metric="euclidean")
         }
 
