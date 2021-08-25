@@ -126,6 +126,6 @@ plt.show()
 #%% Plot performance for data set size
 #%% Plot correlations between method results
 
-sns.pairplot(metric_dfs["ROC/AUC"].transpose())
+sns.pairplot(metric_dfs["ROC/AUC"].transpose()).set(xlim=[0,1]).set(ylim=[0,1])
 
 correlation_matrix = metric_dfs["ROC/AUC"].transpose().astype(float).corr()
