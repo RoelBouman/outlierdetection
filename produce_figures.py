@@ -7,6 +7,8 @@ import pandas as pd
 import seaborn as sns
 from scipy.stats import friedmanchisquare
 from scikit_posthocs import posthoc_nemenyi_friedman
+import math
+sns.set()
 
 result_dir = "result_dir"
 figure_dir = "figures"
@@ -124,8 +126,70 @@ plt.xticks(rotation=45)
 plt.show()
 
 #%% Plot performance for data set size
+
+#%% Perform hierarchical clustering based on correlation
+from scipy.cluster.hierarchy import dendrogram
+from scipy.cluster.hierarchy import linkage
+
+plot_df = metric_dfs["ROC/AUC"]
+
+Q = plt.figure()
+Z = linkage(plot_df, method='average', metric="correlation", optimal_ordering=True,)
+P = dendrogram(Z, labels=plot_df.index, leaf_rotation=45, color_threshold=max(Z[:,2]))
+ordering = P['ivl']
 #%% Plot correlations between method results
 
-sns.pairplot(metric_dfs["ROC/AUC"].transpose()).set(xlim=[0,1]).set(ylim=[0,1])
+sns.pairplot(plot_df.transpose()[ordering]).set(xlim=[0,1]).set(ylim=[0,1])
 
-correlation_matrix = metric_dfs["ROC/AUC"].transpose().astype(float).corr()
+correlation_matrix = plot_df.transpose().astype(float).corr()
+
+#%% combine plots
+
+
+
+def dendrogram_pairplot(score_df):
+    n_methods = len(score_df.index)
+    
+    height = int(math.ceil(n_methods * 1.3))
+    dendrogram_height = height-n_methods
+    
+    f = plt.figure(figsize=(n_methods*2,n_methods*2), )
+    
+    gs = f.add_gridspec(height,n_methods)
+    
+    dendrogram_ax = f.add_subplot(gs[0:(dendrogram_height), 0:])
+    
+    Z = linkage(plot_df, method='average', metric="correlation", optimal_ordering=True,)
+    P = dendrogram(Z, labels=plot_df.index, leaf_rotation=45, color_threshold=max(Z[:,2]))
+    labels = P['ivl']
+    plt.xticks(ticks=[])
+    
+    
+    for i in range(n_methods):
+        for j in range(n_methods):
+            ax = f.add_subplot(gs[dendrogram_height+i,j])
+            ax.set_xlim(0,1)
+            ax.set_ylim(0,1)
+            ax.set(xticks=[0, 1])
+            ax.set(yticks=[0, 1])
+            if i == j:
+                pass           
+            else:
+                ax.plot(score_df.loc[labels[j]],score_df.loc[labels[i]], 'b.')
+                
+            if i == n_methods-1:
+                ax.set_xlabel(labels[j])     
+                ax.xaxis.label.set_size(20)
+            else:
+                ax.set(xticks=[])
+                
+            if j == 0:
+                ax.set_ylabel(labels[i])
+                ax.yaxis.label.set_size(20)
+            else:
+                ax.set(yticks=[])
+    gs.tight_layout(f)
+    f.autofmt_xdate()
+    
+dendrogram_pairplot(plot_df)
+    
