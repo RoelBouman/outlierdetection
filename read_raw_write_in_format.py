@@ -221,6 +221,47 @@ pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
 # pickle.dump(data_dict, open(target_file_name_with_dir, "wb")) 
 
 
+#%% Goldstein CSV data
+
+
+data_dir = "Goldstein_data_raw"
+target_dir = "formatted_OD_data"
+
+if not os.path.exists(target_dir):
+    os.mkdir(target_dir)
+
+csv_file_names = os.listdir(data_dir)
+
+black_list = [] 
+train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
+
+#%% Write Goldstein CSVs to pickles
+for file_name in [f for f in csv_file_names if f not in black_list]:
+    
+    full_path_filename = os.path.join(data_dir, file_name)
+    csv_file = pd.read_csv(full_path_filename)
+    print("----------------------------------------------------")
+    print("Processing: " + file_name)
+    print("----------------------------------------------------")
+    X = csv_file.iloc[:,:-1].values.astype(np.float64) 
+    y_raw = csv_file.iloc[:,-1]
+    y = np.array([1 if v == 'o' else 0 for v in y_raw], dtype=np.float64)
+    dataset_name = re.search('(.+?)-unsupervised-ad\.csv', file_name).group(1).replace('kdd99','http').replace('breast-cancer','wbc')+"_Goldstein"    
+    print(dataset_name)
+
+    categorical_variables = []
+    print("no categorical variables")
+    
+    data_dict = preprocess_data(X, y)
+    
+    dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables)
+    dataset_summaries.append(dataset_summary)
+    
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))   
+
+
 #%% make summary into dataframe and write to latex
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 
