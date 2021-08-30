@@ -41,7 +41,7 @@ for result_file in result_files:
     
     partial_result = pickle.load(open(full_path_filename, 'rb'))
     
-    (data_name, method_name) = re.compile("(.*?)_(.*?)_.*").match(result_file).groups()
+    (data_name, method_name) = re.compile("(.*)_(.*?)_.*").match(result_file).groups()
     
     methods.append(method_name)
     datasets.append(data_name)
@@ -60,18 +60,28 @@ for result_file in result_files:
     
     partial_result = pickle.load(open(full_path_filename, 'rb'))
     
-    (data_name, method_name) = re.compile("(.*?)_(.*?)_.*").match(result_file).groups()
+    (data_name, method_name) = re.compile("(.*)_(.*?)_.*").match(result_file).groups()
         
     for evaluation_metric in evaluation_metrics: 
     
         metric_dfs[evaluation_metric][data_name][method_name] = partial_result[evaluation_metric][method_name]
         
         
-#optional, filter out nans in case not all results are in:
+#%% optional: filter either datasets or methods for which not all methods are in:
+
+prune = "running"        
+        
 for evaluation_metric in evaluation_metrics:
     
-    metric_dfs[evaluation_metric] = metric_dfs[evaluation_metric].dropna(axis=0)#drop columns first, as datasets are processed in inner loop, methods in outer..
-    
+    if prune == "methods":
+        metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
+    elif prune == "datasets":
+        metric_dfs[evaluation_metric].dropna(axis=1, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
+    elif prune == "running":
+        running_dataset = metric_dfs[evaluation_metric].isna().sum().idxmax()
+        metric_dfs[evaluation_metric].drop(running_dataset, axis=1, inplace=True)
+        metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
+
 
 #%% boxplots for 
 for evaluation_metric in evaluation_metrics:
