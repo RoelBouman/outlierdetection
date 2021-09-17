@@ -17,3 +17,5 @@ csvresult_dir_old/
 result_dir_old/
 
 score_dir/
+
+*.log

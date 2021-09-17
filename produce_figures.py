@@ -94,8 +94,26 @@ for evaluation_metric in evaluation_metrics:
     plt.show()
     
     
-#%% calculate friedman  nemenyi
+#%% calculate friedman  nemenyi and write to table
 #TODO: Calculate Friedman using Tom's exact implementation
+
+# def round_to_string(cell):
+#     if cell < 0.05:
+#         return("\\textbf{"+str(round(cell,2))+"}")
+#     else:
+#         return(str(round(cell,2)))
+    
+    
+    
+
+#def p_value_marker(val):
+
+
+#    bold = 'bold' if float(val) < 0.05 else ''
+
+
+#    return 'font-weight: %s' % bold
+
 
 score_df = metric_dfs["ROC/AUC"]
 rank_df = score_to_rank(score_df)
@@ -108,7 +126,11 @@ iman_davenport_score = iman_davenport(rank_df)
 
 print ("iman davenport score: " + str(iman_davenport_score))
 
-nemenyi_table = posthoc_nemenyi_friedman(rank_df)
+nemenyi_table = posthoc_nemenyi_friedman(rank_df).round(2).applymap(str).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
+
+table_file = open("tables/nemenyi_table.tex","w")
+nemenyi_table.to_latex(table_file)
+table_file.close()
 
 
 #%% plot average rank
@@ -133,6 +155,8 @@ plt.figure()
 ax = sns.boxplot(x="method",y="value",data=plot_df)
 ax.set_title("Percentage of maximum performance (ROC/AUC)")
 plt.xticks(rotation=45)
+plt.tight_layout()
+plt.savefig("figures/ROCAUC_boxplot.eps",format="eps")
 plt.show()
 
 #%% Plot performance for data set size
@@ -141,21 +165,21 @@ plt.show()
 from scipy.cluster.hierarchy import dendrogram
 from scipy.cluster.hierarchy import linkage
 
-plot_df = metric_dfs["ROC/AUC"]
+# plot_df = metric_dfs["ROC/AUC"]
 
-Q = plt.figure()
-Z = linkage(plot_df, method='average', metric="correlation", optimal_ordering=True,)
-P = dendrogram(Z, labels=plot_df.index, leaf_rotation=45, color_threshold=max(Z[:,2]))
-ordering = P['ivl']
+# Q = plt.figure()
+# Z = linkage(plot_df, method='average', metric="correlation", optimal_ordering=True,)
+# P = dendrogram(Z, labels=plot_df.index, leaf_rotation=45, color_threshold=max(Z[:,2]))
+# ordering = P['ivl']
 #%% Plot correlations between method results
 
-sns.pairplot(plot_df.transpose()[ordering]).set(xlim=[0,1]).set(ylim=[0,1])
+#sns.pairplot(plot_df.transpose()[ordering]).set(xlim=[0,1]).set(ylim=[0,1])
 
-correlation_matrix = plot_df.transpose().astype(float).corr()
+#correlation_matrix = plot_df.transpose().astype(float).corr()
 
 #%% combine plots
 
-
+plot_df = metric_dfs["ROC/AUC"]
 
 def dendrogram_pairplot(score_df):
     n_methods = len(score_df.index)
@@ -202,4 +226,6 @@ def dendrogram_pairplot(score_df):
     f.autofmt_xdate()
     
 dendrogram_pairplot(plot_df)
+plt.tight_layout()
+plt.savefig("figures/pairplot.eps",format="eps")
     
