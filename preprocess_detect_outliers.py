@@ -29,7 +29,9 @@ score_functions = {"ROC/AUC": roc_auc_score, "R_precision": precision_n_scores, 
 #%% Define parameter settings and methods
 
 from pyod.models.abod import ABOD
+from pyod.models.cblof import CBLOF
 from pyod.models.cof import COF
+from pyod.models.copod import COPOD
 from pyod.models.hbos import HBOS
 from pyod.models.iforest import IForest
 from pyod.models.knn import KNN 
@@ -40,10 +42,11 @@ from pyod.models.lof import LOF
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
+from pyod.models.rod import ROD
 from pyod.models.sod import SOD
 #from pyod.models.sos import SOS #SOS also has memory allocation issues.
 #from pyod.models.ensemble import Ensemble
-#from pyod.models.combination import maximization
+from pyod.models.combination import maximization
 
 
 random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
@@ -51,18 +54,22 @@ random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
 
 #nested dict of methods and parameters
 methods = {
-        "ABOD":ABOD(method="fast", n_neighbors=40), 
-        "COF":COF(n_neighbors=20, method='memory'),
+        #"ABOD":ABOD(method="fast", n_neighbors=40), 
+        "CBLOF":CBLOF(n_clusters=20,use_weights=True),
+        "u-CBLOF":CBLOF(n_clusters=20,use_weights=False),
+        #"COF":COF(n_neighbors=20, method='fast'),
+        #"COPOD":COPOD(),
         #"HBOS":HBOS(n_bins="auto"),
-        "kNN":KNN(n_neighbors=20,method="mean", metric="euclidean"),
-        "Isolation Forest":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
-        "LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state), #aad is the same as the MAD
-        #"LODA":LODA(n_bins="auto"),
-        #"LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(10,21)], combination_function=maximization),
-        "MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
-        "OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
-        "PCA":PCA(n_components=0.5, random_state=random_state), 
-        "SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8)#,
+        #"kNN":KNN(n_neighbors=20,method="mean", metric="euclidean"),
+        #"Isolation Forest":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
+        #"LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state), #aad is the same as the MAD
+        #"LODA":LODA(n_bins="auto")
+        #"LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(10,21)], combination_function=maximization)
+        #"MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
+        #"OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
+        #"PCA":PCA(n_components=0.5, random_state=random_state), 
+        #"ROD":ROD()
+        #"SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8)#,
         #"SOS":SOS(perplexity=4.5, metric="euclidean")
         }
 
