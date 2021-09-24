@@ -1,6 +1,6 @@
 import pickle
 import os
-#import numpy as np
+import numpy as np
 import re
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -12,6 +12,11 @@ sns.set()
 
 result_dir = "result_dir"
 figure_dir = "figures"
+
+method_blacklist = []
+double_dataset_blacklist = ["letter_Goldstein", "annthyroid_Goldstein","wbc_Goldstein"] #completely cluster together with ODDS datasets
+unsolvable_dataset_blacklist = ["speech", "vertebral", "speech_Goldstein"]
+dataset_blacklist = double_dataset_blacklist + unsolvable_dataset_blacklist
 
 result_files = os.listdir(result_dir)
 
@@ -68,11 +73,14 @@ for result_file in result_files:
         
         
 #%% optional: filter either datasets or methods for which not all methods are in:
+    # Also filter blacklisted items.
 
 prune = "running"        
         
 for evaluation_metric in evaluation_metrics:
-    
+    metric_dfs[evaluation_metric].drop(method_blacklist, axis=0, inplace=True)
+    metric_dfs[evaluation_metric].drop(dataset_blacklist,axis=1,inplace=True)
+        
     if prune == "methods":
         metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
     elif prune == "datasets":
@@ -81,6 +89,7 @@ for evaluation_metric in evaluation_metrics:
         running_dataset = metric_dfs[evaluation_metric].isna().sum().idxmax()
         metric_dfs[evaluation_metric].drop(running_dataset, axis=1, inplace=True)
         metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
+        
 
 
 #%% boxplots for 
@@ -126,10 +135,11 @@ iman_davenport_score = iman_davenport(rank_df)
 
 print ("iman davenport score: " + str(iman_davenport_score))
 
-nemenyi_table = posthoc_nemenyi_friedman(rank_df).round(2).applymap(str).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
+nemenyi_table = posthoc_nemenyi_friedman(rank_df)
+nemenyi_formatted = nemenyi_table.round(2).applymap(str).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
 table_file = open("tables/nemenyi_table.tex","w")
-nemenyi_table.to_latex(table_file)
+nemenyi_formatted.to_latex(table_file)
 table_file.close()
 
 
@@ -159,6 +169,8 @@ plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot.eps",format="eps")
 plt.show()
 
+perc_of_max = (score_df/score_df.max()*100).transpose()
+
 #%% Plot performance for data set size
 
 #%% Perform hierarchical clustering based on correlation
@@ -179,7 +191,7 @@ from scipy.cluster.hierarchy import linkage
 
 #%% combine plots
 
-plot_df = metric_dfs["ROC/AUC"]
+plot_df = metric_dfs["ROC/AUC"].astype(float)
 
 def dendrogram_pairplot(score_df):
     n_methods = len(score_df.index)
@@ -229,3 +241,27 @@ dendrogram_pairplot(plot_df)
 plt.tight_layout()
 plt.savefig("figures/pairplot.eps",format="eps")
     
+
+#%% clustermap
+
+clustermap = sns.clustermap(plot_df.transpose(), method="average",metric="correlation")
+
+clustermap.savefig("figures/biclustering.eps",format="eps")
+
+
+#%% biclustering
+
+
+from sklearn.cluster import SpectralCoclustering
+from sklearn.cluster import SpectralBiclustering
+
+
+model = SpectralBiclustering(n_clusters=4)
+model.fit(plot_df.transpose())
+
+fit_data = plot_df.transpose().values
+fit_data = fit_data[np.argsort(model.row_labels_)]
+fit_data = fit_data[:, np.argsort(model.column_labels_)]
+
+plt.matshow(fit_data)
+plt.show()
