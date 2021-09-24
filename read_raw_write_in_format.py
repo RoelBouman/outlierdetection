@@ -16,22 +16,11 @@ import pickle
 import re
 import json
 
-data_dir = "ODDS_data_raw/matfile_data"
-nonmat_data_dir = "ODDS_data_raw/other_data"
+
 target_dir = "formatted_OD_data"
 
 if not os.path.exists(target_dir):
     os.mkdir(target_dir)
-
-matfile_names = os.listdir(data_dir)
-
-HDFlist = ["http.mat", "smtp.mat"] #use MATLAB 7.3 file format (need HDF reader)
-black_list = ["ecoli.mat", "breastw.mat", "lympho.mat"] #ecoli is broken, lympho is removed due to being categorical, breastw has too many outliers %-wise, this is fixed in wbc
-
-train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
-
-with open("ODDS_data_raw/categorical_variables_per_dataset.json", "r") as json_file:
-    categorical_variables_per_dataset = json.load(json_file)
 
 dataset_summaries = []
 
@@ -65,7 +54,7 @@ def preprocess_data(X,y):
     
     return(data_dict)
 
-def make_dataset_summary(dataset_name, data_dict, categorical_variables):
+def make_dataset_summary(dataset_name, data_dict, categorical_variables, origin):
     
     n_samples, n_variables = data_dict["X"].shape
     n_outliers = int(np.sum(data_dict["y"]))
@@ -79,6 +68,7 @@ def make_dataset_summary(dataset_name, data_dict, categorical_variables):
     #                       columns=["#samples", "#variables", "#outliers (%outliers)", "#removed duplicates", "#numeric variables", "#categorical variables", "#removed variables"])
 
     summary = {"Name": dataset_name,
+               "Origin": origin,
                "#samples": n_samples, 
                "#variables": n_variables, 
                "#outliers": n_outliers,
@@ -89,6 +79,23 @@ def make_dataset_summary(dataset_name, data_dict, categorical_variables):
                "#removed variables": n_variables_filtered}
     
     return(summary)
+#%% ODDS
+data_dir = "ODDS_data_raw/matfile_data"
+nonmat_data_dir = "ODDS_data_raw/other_data"
+
+
+matfile_names = os.listdir(data_dir)
+
+HDFlist = ["http.mat", "smtp.mat"] #use MATLAB 7.3 file format (need HDF reader)
+black_list = ["ecoli.mat", "breastw.mat", "lympho.mat"] #ecoli is broken, lympho is removed due to being categorical, breastw has too many outliers %-wise, this is fixed in wbc
+
+train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
+
+with open("ODDS_data_raw/categorical_variables_per_dataset.json", "r") as json_file:
+    categorical_variables_per_dataset = json.load(json_file)
+    
+origin = "ODDS"
+
 #%%
 # Regular mat files
 
@@ -113,7 +120,7 @@ for file_name in [f for f in matfile_names if f not in HDFlist and f not in blac
     
     data_dict = preprocess_data(X, y)
     
-    dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables)
+    dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     dataset_summaries.append(dataset_summary)
     
     target_file_name =  dataset_name + ".pickle"
@@ -143,7 +150,7 @@ for file_name in HDFlist:
     
     data_dict = preprocess_data(X, y)
     
-    dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables)
+    dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     dataset_summaries.append(dataset_summary)
     
     target_file_name =  dataset_name + ".pickle"
@@ -181,7 +188,7 @@ except KeyError:
 
 data_dict = preprocess_data(X, y)
 
-dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables)
+dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
 dataset_summaries.append(dataset_summary)
 
 target_file_name = re.search('(.+?)\.arff', file_name).group(1) + ".pickle"
@@ -235,6 +242,8 @@ csv_file_names = os.listdir(data_dir)
 black_list = [] 
 train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
+origin="Goldstein"
+
 #%% Write Goldstein CSVs to pickles
 for file_name in [f for f in csv_file_names if f not in black_list]:
     
@@ -254,17 +263,62 @@ for file_name in [f for f in csv_file_names if f not in black_list]:
     
     data_dict = preprocess_data(X, y)
     
-    dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables)
+    dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     dataset_summaries.append(dataset_summary)
     
     target_file_name =  dataset_name + ".pickle"
     target_file_name_with_dir = os.path.join(target_dir, target_file_name)
     pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))   
 
+#%% GAAL CSV data
+
+
+data_dir = "GAAL_data_raw"
+target_dir = "formatted_OD_data"
+
+if not os.path.exists(target_dir):
+    os.mkdir(target_dir)
+
+csv_file_names = os.listdir(data_dir)
+
+black_list = ["Annthyroid", "WDBC"] 
+train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
+
+origin = "GAAL"
+
+#%% Write GAAL paper CSVs to pickles:
+for file_name in [f for f in csv_file_names if f not in black_list]:
+    
+    full_path_filename = os.path.join(data_dir, file_name)
+    csv_file = pd.read_csv(full_path_filename)
+    print("----------------------------------------------------")
+    print("Processing: " + file_name)
+    print("----------------------------------------------------")
+    X = csv_file.iloc[:,2:].values.astype(np.float64) 
+    y_raw = csv_file.iloc[:,1]
+    y = np.array([0 if v == 'nor' else 1 for v in y_raw], dtype=np.float64)
+    dataset_name = file_name.lower()
+    print(dataset_name)
+
+    categorical_variables = []
+    print("no categorical variables")
+    
+    data_dict = preprocess_data(X, y)
+    
+    dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+    dataset_summaries.append(dataset_summary)
+    
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))  
 
 #%% make summary into dataframe and write to latex
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 
 summaries_df = summaries_df.drop(["#numeric variables", "#categorical variables", "#removed variables"], axis=1,) #remove columns irrelevant to current iteration of research
 
-latex_table = summaries_df.to_latex(index=False, bold_rows = True, label="table:datasets")
+latex_table = summaries_df.style.to_latex(label="table:datasets")
+
+table_file = open("tables/datasets_table.tex","w")
+summaries_df.style.to_latex(table_file, label="table:datasets")
+table_file.close()
