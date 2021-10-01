@@ -246,7 +246,7 @@ plt.savefig("figures/pairplot.eps",format="eps")
 
 clustermap = sns.clustermap(plot_df.transpose(), method="average",metric="correlation")
 
-clustermap.savefig("figures/biclustering.eps",format="eps")
+clustermap.savefig("figures/biclustering_optimal_ordering.eps",format="eps")
 
 
 #%% biclustering
@@ -256,12 +256,19 @@ from sklearn.cluster import SpectralCoclustering
 from sklearn.cluster import SpectralBiclustering
 
 
-model = SpectralBiclustering(n_clusters=4)
+model = SpectralBiclustering(n_clusters=5)
 model.fit(plot_df.transpose())
 
 fit_data = plot_df.transpose().values
 fit_data = fit_data[np.argsort(model.row_labels_)]
 fit_data = fit_data[:, np.argsort(model.column_labels_)]
 
+ylabels = list(plot_df.columns[np.argsort(model.row_labels_)])
+xlabels = list(plot_df.index[np.argsort(model.column_labels_)])
+
 plt.matshow(fit_data)
+plt.grid(b=None)
+plt.xticks(range(len(xlabels)), labels=xlabels, rotation="vertical")
+plt.yticks(range(len(ylabels)), labels=ylabels)
+plt.savefig("figures/spectralbiclustering5.eps", format="eps")
 plt.show()
