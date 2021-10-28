@@ -14,7 +14,7 @@ result_dir = "result_dir"
 figure_dir = "figures"
 
 method_blacklist = []
-double_dataset_blacklist = ["letter_Goldstein", "annthyroid_Goldstein","wbc_Goldstein"] #completely cluster together with ODDS datasets
+double_dataset_blacklist = ["letter_Goldstein", "annthyroid_Goldstein","wbc_Goldstein", "satellite_Goldstein"] #completely cluster together with ODDS datasets
 unsolvable_dataset_blacklist = ["speech", "vertebral", "speech_Goldstein"]
 dataset_blacklist = double_dataset_blacklist + unsolvable_dataset_blacklist
 
@@ -106,14 +106,17 @@ for evaluation_metric in evaluation_metrics:
 #%% calculate friedman  nemenyi and write to table
 #TODO: Calculate Friedman using Tom's exact implementation
 
-# def round_to_string(cell):
-#     if cell < 0.05:
-#         return("\\textbf{"+str(round(cell,2))+"}")
-#     else:
-#         return(str(round(cell,2)))
-    
-    
-    
+#https://stackoverflow.com/questions/6913532/display-a-decimal-in-scientific-notation
+def format_e(n):
+    a = '%E' % n
+    return a.split('E')[0].rstrip('0').rstrip('.') + 'E' + a.split('E')[1]
+
+
+def p_value_to_string(p_value, n_decimals):
+    if p_value < 1.0/(10**n_decimals):
+        return format_e(1.0/(10**n_decimals))
+    else:
+        return str(round(p_value, n_decimals))
 
 #def p_value_marker(val):
 
@@ -122,7 +125,7 @@ for evaluation_metric in evaluation_metrics:
 
 
 #    return 'font-weight: %s' % bold
-
+n_decimals = 3
 
 score_df = metric_dfs["ROC/AUC"]
 rank_df = score_to_rank(score_df)
@@ -136,7 +139,7 @@ iman_davenport_score = iman_davenport(rank_df)
 print ("iman davenport score: " + str(iman_davenport_score))
 
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
-nemenyi_formatted = nemenyi_table.round(2).applymap(str).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
+nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
 table_file = open("tables/nemenyi_table.tex","w")
 nemenyi_formatted.to_latex(table_file)
@@ -243,6 +246,7 @@ plt.savefig("figures/pairplot.eps",format="eps")
     
 
 #%% clustermap
+#Do clustering on percentage of performance, rather than straight AUC
 
 clustermap = sns.clustermap(plot_df.transpose(), method="average",metric="correlation")
 
@@ -256,7 +260,7 @@ from sklearn.cluster import SpectralCoclustering
 from sklearn.cluster import SpectralBiclustering
 
 
-model = SpectralBiclustering(n_clusters=5)
+model = SpectralBiclustering(n_clusters=3, method="log", n_best=4)
 model.fit(plot_df.transpose())
 
 fit_data = plot_df.transpose().values
@@ -270,5 +274,7 @@ plt.matshow(fit_data)
 plt.grid(b=None)
 plt.xticks(range(len(xlabels)), labels=xlabels, rotation="vertical")
 plt.yticks(range(len(ylabels)), labels=ylabels)
-plt.savefig("figures/spectralbiclustering5.eps", format="eps")
+plt.savefig("figures/spectralbiclusteringtemp.eps", format="eps")
 plt.show()
+
+#%% Make table
