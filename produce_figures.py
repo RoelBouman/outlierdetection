@@ -277,4 +277,30 @@ plt.yticks(range(len(ylabels)), labels=ylabels)
 plt.savefig("figures/spectralbiclusteringtemp.eps", format="eps")
 plt.show()
 
-#%% Make table
+#%% Make table summarizing significance and performance results
+
+p_value_threshold = 0.05
+
+result_df = pd.DataFrame()
+
+result_df["Mean Performance"] = score_df.transpose().mean()
+
+result_df["Performance std"] = score_df.transpose().std()
+
+result_df["Performance Range"] = (score_df.transpose().max() - score_df.transpose().min()).astype(float)
+
+method_outperforms = []
+for method in result_df.index:
+    outperforming_methods = []
+    for competing_method in result_df.index:
+        if nemenyi_table[method][competing_method] < p_value_threshold and result_df["Mean Performance"][method] > result_df["Mean Performance"][competing_method]:
+            outperforming_methods.append(competing_method)
+    method_outperforms.append(", ".join(outperforming_methods))
+
+result_df["Outperforms"] = method_outperforms
+
+result_df = result_df.sort_values(by="Mean Performance", ascending=False).round(4)
+
+table_file = open("tables/significance_results.tex","w")
+result_df.to_latex(table_file)
+table_file.close()
