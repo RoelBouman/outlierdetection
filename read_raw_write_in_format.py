@@ -239,7 +239,8 @@ if not os.path.exists(target_dir):
 
 csv_file_names = os.listdir(data_dir)
 
-black_list = [] 
+black_list =  ["annthyroid", "letter", "satellite", "shuttle", "speech", "wbc"]
+black_list = [f+"-unsupervised-ad.csv" for f in black_list]
 train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
 origin="Goldstein"
@@ -255,7 +256,7 @@ for file_name in [f for f in csv_file_names if f not in black_list]:
     X = csv_file.iloc[:,:-1].values.astype(np.float64) 
     y_raw = csv_file.iloc[:,-1]
     y = np.array([1 if v == 'o' else 0 for v in y_raw], dtype=np.float64)
-    dataset_name = re.search('(.+?)-unsupervised-ad\.csv', file_name).group(1).replace('kdd99','http').replace('breast-cancer','wbc')+"_Goldstein"    
+    dataset_name = re.search('(.+?)-unsupervised-ad\.csv', file_name).group(1)
     print(dataset_name)
 
     categorical_variables = []
