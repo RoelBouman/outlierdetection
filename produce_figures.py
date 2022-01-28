@@ -15,8 +15,10 @@ figure_dir = "figures"
 
 method_blacklist = []
 double_dataset_blacklist = ["letter_Goldstein", "annthyroid_Goldstein","wbc_Goldstein", "satellite_Goldstein"] #completely cluster together with ODDS datasets
+duplicate_goldstein_blacklist = [""]
 unsolvable_dataset_blacklist = ["speech", "vertebral", "speech_Goldstein"]
-dataset_blacklist = double_dataset_blacklist + unsolvable_dataset_blacklist
+own_dataset_blacklist = ["letter-recognition.data"] #own datasets for global/local verification
+dataset_blacklist = double_dataset_blacklist #+ unsolvable_dataset_blacklist
 
 result_files = os.listdir(result_dir)
 
@@ -54,7 +56,7 @@ for result_file in result_files:
 methods = list(set(methods))
 datasets = list(set(datasets))
 
-#%%
+#%% Read all metrics from files
 metric_dfs = {}
 for evaluation_metric in evaluation_metrics:
     
@@ -91,17 +93,6 @@ for evaluation_metric in evaluation_metrics:
         metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
         
 
-
-#%% boxplots for 
-for evaluation_metric in evaluation_metrics:
-    
-    plot_df = metric_dfs[evaluation_metric].melt(var_name="dataset", ignore_index=False).reset_index().rename(columns={"index":"method"})
-    plt.figure()
-    ax = sns.boxplot(x="method",y="value",data=plot_df)
-    ax.set_title(evaluation_metric)
-    plt.xticks(rotation=45)
-    plt.show()
-    
     
 #%% calculate friedman  nemenyi and write to table
 #TODO: Calculate Friedman using Tom's exact implementation
@@ -145,138 +136,6 @@ table_file = open("tables/nemenyi_table.tex","w")
 nemenyi_formatted.to_latex(table_file)
 table_file.close()
 
-
-#%% plot average rank
-average_rank = rank_df.mean()
-
-plt.figure()
-average_rank.plot.bar()
-plt.show()
-
-#%% plot average percentage of maximum
-
-average_perc_max = (score_df/score_df.max()).mean(axis=1)
-
-plt.figure()
-average_perc_max.plot.bar()
-plt.show()
-
-
-
-plot_df = (score_df/score_df.max()*100).melt(var_name="dataset", ignore_index=False).reset_index().rename(columns={"index":"method"})
-plt.figure()
-ax = sns.boxplot(x="method",y="value",data=plot_df)
-ax.set_title("Percentage of maximum performance (ROC/AUC)")
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.savefig("figures/ROCAUC_boxplot.eps",format="eps")
-plt.show()
-
-perc_of_max = (score_df/score_df.max()*100).transpose()
-
-#%% Plot performance for data set size
-
-#%% Perform hierarchical clustering based on correlation
-from scipy.cluster.hierarchy import dendrogram
-from scipy.cluster.hierarchy import linkage
-
-# plot_df = metric_dfs["ROC/AUC"]
-
-# Q = plt.figure()
-# Z = linkage(plot_df, method='average', metric="correlation", optimal_ordering=True,)
-# P = dendrogram(Z, labels=plot_df.index, leaf_rotation=45, color_threshold=max(Z[:,2]))
-# ordering = P['ivl']
-#%% Plot correlations between method results
-
-#sns.pairplot(plot_df.transpose()[ordering]).set(xlim=[0,1]).set(ylim=[0,1])
-
-#correlation_matrix = plot_df.transpose().astype(float).corr()
-
-#%% combine plots
-
-plot_df = metric_dfs["ROC/AUC"].astype(float)
-
-def dendrogram_pairplot(score_df):
-    n_methods = len(score_df.index)
-    
-    height = int(math.ceil(n_methods * 1.3))
-    dendrogram_height = height-n_methods
-    
-    f = plt.figure(figsize=(n_methods*2,n_methods*2), )
-    
-    gs = f.add_gridspec(height,n_methods)
-    
-    dendrogram_ax = f.add_subplot(gs[0:(dendrogram_height), 0:])
-    
-    Z = linkage(plot_df, method='average', metric="correlation", optimal_ordering=True,)
-    P = dendrogram(Z, labels=plot_df.index, leaf_rotation=45, color_threshold=max(Z[:,2]))
-    labels = P['ivl']
-    plt.xticks(ticks=[])
-    
-    
-    for i in range(n_methods):
-        for j in range(n_methods):
-            ax = f.add_subplot(gs[dendrogram_height+i,j])
-            ax.set_xlim(0,1)
-            ax.set_ylim(0,1)
-            ax.set(xticks=[0, 1])
-            ax.set(yticks=[0, 1])
-            if i == j:
-                pass           
-            else:
-                ax.plot(score_df.loc[labels[j]],score_df.loc[labels[i]], 'b.')
-                
-            if i == n_methods-1:
-                ax.set_xlabel(labels[j])     
-                ax.xaxis.label.set_size(20)
-            else:
-                ax.set(xticks=[])
-                
-            if j == 0:
-                ax.set_ylabel(labels[i])
-                ax.yaxis.label.set_size(20)
-            else:
-                ax.set(yticks=[])
-    gs.tight_layout(f)
-    f.autofmt_xdate()
-    
-dendrogram_pairplot(plot_df)
-plt.tight_layout()
-plt.savefig("figures/pairplot.eps",format="eps")
-    
-
-#%% clustermap
-#Do clustering on percentage of performance, rather than straight AUC
-
-clustermap = sns.clustermap(plot_df.transpose(), method="average",metric="correlation")
-
-clustermap.savefig("figures/biclustering_optimal_ordering.eps",format="eps")
-
-
-#%% biclustering
-
-
-from sklearn.cluster import SpectralCoclustering
-from sklearn.cluster import SpectralBiclustering
-
-
-model = SpectralBiclustering(n_clusters=3, method="log", n_best=4)
-model.fit(plot_df.transpose())
-
-fit_data = plot_df.transpose().values
-fit_data = fit_data[np.argsort(model.row_labels_)]
-fit_data = fit_data[:, np.argsort(model.column_labels_)]
-
-ylabels = list(plot_df.columns[np.argsort(model.row_labels_)])
-xlabels = list(plot_df.index[np.argsort(model.column_labels_)])
-
-plt.matshow(fit_data)
-plt.grid(b=None)
-plt.xticks(range(len(xlabels)), labels=xlabels, rotation="vertical")
-plt.yticks(range(len(ylabels)), labels=ylabels)
-plt.savefig("figures/spectralbiclusteringtemp.eps", format="eps")
-plt.show()
-
 #%% Make table summarizing significance and performance results
 
 p_value_threshold = 0.05
@@ -302,5 +161,135 @@ result_df["Outperforms"] = method_outperforms
 result_df = result_df.sort_values(by="Mean Performance", ascending=False).round(4)
 
 table_file = open("tables/significance_results.tex","w")
+result_df.to_latex(table_file)
+table_file.close()
+
+#%% plot average percentage of maximum
+
+plot_df = (score_df/score_df.max()*100).melt(var_name="dataset", ignore_index=False).reset_index().rename(columns={"index":"method"})
+plt.figure()
+ax = sns.boxplot(x="method",y="value",data=plot_df)
+ax.set_title("Percentage of maximum performance (ROC/AUC)")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.savefig("figures/ROCAUC_boxplot.eps",format="eps")
+plt.show()
+
+perc_of_max = (score_df/score_df.max()*100).transpose()
+
+
+#%% clustermap
+#Do clustering on percentage of performance, rather than straight AUC
+
+plot_df = metric_dfs["ROC/AUC"].astype(float)
+
+clustermap = sns.clustermap(plot_df.transpose().iloc[:,:], method="average",metric="correlation", figsize=(15,15))
+
+clustermap.savefig("figures/clustermap_full_scores.eps",format="eps")
+plt.show()
+
+
+#%% Redo nemenyi test and pairwise testing based on the clustering
+
+#%% Local datasets
+
+local_datasets = ["parkinson", "wilt", "aloi_Goldstein", "vowels", "letter", "pen-local_Goldstein", "waveform", "glass", "ionosphere"]
+
+
+score_df = metric_dfs["ROC/AUC"][local_datasets]
+rank_df = score_to_rank(score_df)
+
+friedman_score = friedman(rank_df)
+
+print("local:")
+print(friedman_score)
+
+iman_davenport_score = iman_davenport(rank_df)
+
+print ("iman davenport score local: " + str(iman_davenport_score))
+
+nemenyi_table = posthoc_nemenyi_friedman(rank_df)
+nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
+
+table_file = open("tables/nemenyi_table_local.tex","w")
+nemenyi_formatted.to_latex(table_file)
+table_file.close()
+
+#%% Make table summarizing significance and performance results for local datasets
+
+p_value_threshold = 0.05
+
+result_df = pd.DataFrame()
+
+result_df["Mean Performance"] = score_df.transpose().mean()
+
+result_df["Performance std"] = score_df.transpose().std()
+
+result_df["Performance Range"] = (score_df.transpose().max() - score_df.transpose().min()).astype(float)
+
+method_outperforms = []
+for method in result_df.index:
+    outperforming_methods = []
+    for competing_method in result_df.index:
+        if nemenyi_table[method][competing_method] < p_value_threshold and result_df["Mean Performance"][method] > result_df["Mean Performance"][competing_method]:
+            outperforming_methods.append(competing_method)
+    method_outperforms.append(", ".join(outperforming_methods))
+
+result_df["Outperforms"] = method_outperforms
+
+result_df = result_df.sort_values(by="Mean Performance", ascending=False).round(4)
+
+table_file = open("tables/significance_results_local.tex","w")
+result_df.to_latex(table_file)
+table_file.close()
+
+#%% Global datasets
+
+score_df = metric_dfs["ROC/AUC"]
+global_datasets = score_df.columns.difference(local_datasets)
+score_df = score_df[global_datasets]
+rank_df = score_to_rank(score_df)
+
+friedman_score = friedman(rank_df)
+
+print("global:")
+print(friedman_score)
+
+iman_davenport_score = iman_davenport(rank_df)
+
+print ("iman davenport score global: " + str(iman_davenport_score))
+
+nemenyi_table = posthoc_nemenyi_friedman(rank_df)
+nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
+
+table_file = open("tables/nemenyi_table_global.tex","w")
+nemenyi_formatted.to_latex(table_file)
+table_file.close()
+
+#%% Make table summarizing significance and performance results for global datasets
+
+p_value_threshold = 0.05
+
+result_df = pd.DataFrame()
+
+result_df["Mean Performance"] = score_df.transpose().mean()
+
+result_df["Performance std"] = score_df.transpose().std()
+
+result_df["Performance Range"] = (score_df.transpose().max() - score_df.transpose().min()).astype(float)
+
+method_outperforms = []
+for method in result_df.index:
+    outperforming_methods = []
+    for competing_method in result_df.index:
+        if nemenyi_table[method][competing_method] < p_value_threshold and result_df["Mean Performance"][method] > result_df["Mean Performance"][competing_method]:
+            outperforming_methods.append(competing_method)
+    method_outperforms.append(", ".join(outperforming_methods))
+
+result_df["Outperforms"] = method_outperforms
+
+result_df = result_df.sort_values(by="Mean Performance", ascending=False).round(4)
+
+table_file = open("tables/significance_results_global.tex","w")
 result_df.to_latex(table_file)
 table_file.close()

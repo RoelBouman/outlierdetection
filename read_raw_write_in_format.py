@@ -317,8 +317,27 @@ summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 
 summaries_df = summaries_df.drop(["#numeric variables", "#categorical variables", "#removed variables"], axis=1,) #remove columns irrelevant to current iteration of research
 
+summaries_df.to_csv("tables/datasets_summaries.csv", index=False)
+
 latex_table = summaries_df.style.to_latex(label="table:datasets")
 
 table_file = open("tables/datasets_table.tex","w")
 summaries_df.style.to_latex(table_file, label="table:datasets")
 table_file.close()
+
+
+#%% Write ELKI data
+
+data_dir = "ELKI_data_raw"
+target_dir = "formatted_OD_data_ELKI_test"
+
+if not os.path.exists(target_dir):
+    os.mkdir(target_dir)
+
+arff_file_folder = os.listdir(data_dir)
+
+black_list = ["Annthyroid", "Arrhythmia", "Cardiotocography", "HeartDisease", "Pima", "SpamBase"] 
+
+train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
+
+origin = "ELKI"

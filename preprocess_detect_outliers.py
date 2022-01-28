@@ -26,6 +26,45 @@ picklefile_names = [filename.replace(pickle_dir+os.path.sep,"") for filename in 
 #define score function:
 score_functions = {"ROC/AUC": roc_auc_score, "R_precision": precision_n_scores, "adjusted_R_precision": adjusted_precision_n_scores, "average_precision": average_precision, "adjusted_average_precision": adjusted_average_precision}
 
+#%% Define ensemble class for LOF
+from sklearn.utils import check_array 
+ 
+from pyod.models.base import BaseDetector 
+from pyod.models.combination import average 
+from pyod.models.lof import LOF 
+
+class Ensemble(BaseDetector): 
+     
+    def __init__(self, estimators=[LOF()], combination_function=average, contamination=0.1, **kwargs): 
+        super(Ensemble, self).__init__(contamination=contamination) 
+        self.estimators = estimators 
+        self.n_estimators_ = len(estimators) 
+        self.combination_function = combination_function 
+        self.kwargs = kwargs 
+         
+    def fit(self, X, y=None): 
+        X = check_array(X) 
+        n_samples = X.shape[0] 
+         
+        all_scores = np.zeros((n_samples,self.n_estimators_)) 
+         
+        for i, estimator in enumerate(self.estimators): 
+            estimator.fit(X) 
+            all_scores[:,i] = estimator.decision_scores_ 
+             
+        self.decision_scores_ = self.combination_function(all_scores, **self.kwargs) 
+         
+        return self 
+         
+    def decision_function(self, X): 
+        n_samples = X.shape[0] 
+         
+        all_scores = np.zeros((n_samples,self.n_estimators_)) 
+         
+        for i, estimator in enumerate(self.estimators): 
+            all_scores[:,i] = estimator.decision_function(X) 
+         
+        return self.combination_function(all_scores, **self.kwargs)
 #%% Define parameter settings and methods
 
 from pyod.models.abod import ABOD
@@ -42,35 +81,32 @@ from pyod.models.lof import LOF
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
-from pyod.models.rod import ROD
 from pyod.models.sod import SOD
 #from pyod.models.sos import SOS #SOS also has memory allocation issues.
-#from pyod.models.ensemble import Ensemble
 from pyod.models.combination import maximization
 
 
 random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
 
 
+
 #nested dict of methods and parameters
 methods = {
-        #"ABOD":ABOD(method="fast", n_neighbors=40), 
+        "ABOD":ABOD(method="fast", n_neighbors=40), 
         "CBLOF":CBLOF(n_clusters=20,use_weights=True),
         "u-CBLOF":CBLOF(n_clusters=20,use_weights=False),
-        #"COF":COF(n_neighbors=20, method='fast'),
-        #"COPOD":COPOD(),
-        #"HBOS":HBOS(n_bins="auto"),
-        #"kNN":KNN(n_neighbors=20,method="mean", metric="euclidean"),
-        #"Isolation Forest":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
-        #"LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state), #aad is the same as the MAD
-        #"LODA":LODA(n_bins="auto")
-        #"LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(10,21)], combination_function=maximization)
-        #"MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
-        #"OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
-        #"PCA":PCA(n_components=0.5, random_state=random_state), 
-        #"ROD":ROD()
-        #"SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8)#,
-        #"SOS":SOS(perplexity=4.5, metric="euclidean")
+        "COF":COF(n_neighbors=20, method='fast'),
+        "COPOD":COPOD(),
+        "HBOS":HBOS(n_bins="auto"),
+        "kNN":KNN(n_neighbors=20,method="mean", metric="euclidean"),
+        "Isolation Forest":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
+        "LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state), #aad is the same as the MAD
+        "LODA":LODA(n_bins="auto"),
+        "LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(10,21)], combination_function=maximization),
+        "MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
+        "OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
+        "PCA":PCA(n_components=0.5, random_state=random_state), 
+        "SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8)#,
         }
 
 #%% loop over all data, but do not reproduce existing results
