@@ -312,6 +312,53 @@ for file_name in [f for f in csv_file_names if f not in black_list]:
     target_file_name_with_dir = os.path.join(target_dir, target_file_name)
     pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))  
 
+
+
+
+#%% Write ELKI data
+
+data_dir = "ELKI_data_raw"
+target_dir = "formatted_OD_data"
+
+if not os.path.exists(target_dir):
+    os.mkdir(target_dir)
+
+arff_file_folders = os.listdir(data_dir)
+
+black_list = ["Annthyroid", "Arrhythmia", "Cardiotocography", "HeartDisease", "Pima", "SpamBase"] 
+original_file_list = ["Hepatitis_withoutdupl_norm_16.arff", "InternetAds_withoutdupl_norm_19.arff", "PageBlocks_withoutdupl_norm_09.arff", "Parkinson_withoutdupl_norm_75.arff", "Stamps_withoutdupl_norm_09.arff", "Wilt_withoutdupl_norm_05.arff"]
+
+train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
+
+origin = "ELKI"
+
+#%% Write Campos paper ARFF to pickles:
+for file_folder, file_name in zip(sorted([f for f in arff_file_folders if f not in black_list]), original_file_list):
+    
+    full_path_filename = os.path.join(data_dir, file_folder, file_name)
+    arff_data = arff.loadarff(full_path_filename)
+    print("----------------------------------------------------")
+    print("Processing: " + file_name)
+    print("----------------------------------------------------")
+    arff_df = pd.DataFrame(arff_data[0])
+    X = arff_df.iloc[:,:-2].values.astype(np.float64)
+    y_raw = arff_df["outlier"]
+    y = np.array([0 if v == b'no' else 1 for v in y_raw], dtype=np.float64)
+    dataset_name = file_folder.lower()
+    print(dataset_name)
+
+    categorical_variables = []
+    print("no categorical variables")
+    
+    data_dict = preprocess_data(X, y)
+    
+    dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+    dataset_summaries.append(dataset_summary)
+    
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))  
+
 #%% make summary into dataframe and write to latex
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 
@@ -324,20 +371,3 @@ latex_table = summaries_df.style.to_latex(label="table:datasets")
 table_file = open("tables/datasets_table.tex","w")
 summaries_df.style.to_latex(table_file, label="table:datasets")
 table_file.close()
-
-
-#%% Write ELKI data
-
-data_dir = "ELKI_data_raw"
-target_dir = "formatted_OD_data_ELKI_test"
-
-if not os.path.exists(target_dir):
-    os.mkdir(target_dir)
-
-arff_file_folder = os.listdir(data_dir)
-
-black_list = ["Annthyroid", "Arrhythmia", "Cardiotocography", "HeartDisease", "Pima", "SpamBase"] 
-
-train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
-
-origin = "ELKI"
