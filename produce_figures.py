@@ -15,10 +15,9 @@ figure_dir = "figures"
 
 method_blacklist = []
 double_dataset_blacklist = ["letter_Goldstein", "annthyroid_Goldstein","wbc_Goldstein", "satellite_Goldstein"] #completely cluster together with ODDS datasets
-duplicate_goldstein_blacklist = [""]
 unsolvable_dataset_blacklist = ["speech", "vertebral", "speech_Goldstein"]
 own_dataset_blacklist = ["letter-recognition.data"] #own datasets for global/local verification
-dataset_blacklist = double_dataset_blacklist #+ unsolvable_dataset_blacklist
+dataset_blacklist = double_dataset_blacklist + unsolvable_dataset_blacklist
 
 result_files = os.listdir(result_dir)
 
