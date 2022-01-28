@@ -1,21 +1,36 @@
 
 formatted_OD_data/
 
-figures/
-
-result_dir/
-
-old/
-*.pyc
-
-csvresult_dir/
-
-speed_result_dir/
-
 csvresult_dir_old/
 
 result_dir_old/
 
+ELKI_data_raw/
+
+formatted_OD_data_ELKI_test/
+
+GAAL_data_raw/
+
+Goldstein_data_raw/
+
+ODDS_data_raw/
+
+result_dir/
+
 score_dir/
 
+speed_result_dir/
+
+UCI_data_key/
+
+UCI_data_raw/
+
+csvresult_dir/
+
+old/
+*.pyc
+
+
 *.log
+
+*.tex
