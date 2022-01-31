@@ -112,9 +112,6 @@ methods = {
 #%% loop over all data, but do not reproduce existing results
 
 
-
-#%% define calculation function for parallelization:
-
 #make pickle file directory
 target_dir = os.path.join(result_dir)
 
