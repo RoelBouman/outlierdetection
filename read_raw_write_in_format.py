@@ -239,7 +239,7 @@ if not os.path.exists(target_dir):
 
 csv_file_names = os.listdir(data_dir)
 
-black_list =  ["annthyroid", "letter", "satellite", "shuttle", "speech", "wbc"]
+black_list =  ["annthyroid", "letter", "satellite", "shuttle", "speech", "breast-cancer"]
 black_list = [f+"-unsupervised-ad.csv" for f in black_list]
 train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
