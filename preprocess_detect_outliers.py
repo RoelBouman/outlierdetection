@@ -86,6 +86,7 @@ from pyod.models.sod import SOD
 from pyod.models.combination import maximization
 
 from wrappers import ExtendedIForest
+from additional_methods import ODIN
 
 
 random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
@@ -109,7 +110,8 @@ methods = {
         # "OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
         # "PCA":PCA(n_components=0.5, random_state=random_state), 
         # "SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8)#,
-        "EIF":ExtendedIForest(n_estimators=1000)
+        "EIF":ExtendedIForest(n_estimators=1000),
+        "ODIN":ODIN(n_neighbors=20)
         }
 
 #%% loop over all data, but do not reproduce existing results
