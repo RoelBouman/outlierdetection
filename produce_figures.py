@@ -14,10 +14,10 @@ result_dir = "result_dir"
 figure_dir = "figures"
 
 method_blacklist = []
-double_dataset_blacklist = ["letter_Goldstein", "annthyroid_Goldstein","wbc_Goldstein", "satellite_Goldstein"] #completely cluster together with ODDS datasets
-unsolvable_dataset_blacklist = ["speech", "vertebral", "speech_Goldstein"]
+#double_dataset_blacklist = ["letter_Goldstein", "annthyroid_Goldstein","wbc_Goldstein", "satellite_Goldstein"] #completely cluster together with ODDS datasets
+unsolvable_dataset_blacklist = ["speech", "vertebral"]#, "speech_Goldstein"]
 own_dataset_blacklist = ["letter-recognition.data"] #own datasets for global/local verification
-dataset_blacklist = double_dataset_blacklist + unsolvable_dataset_blacklist
+dataset_blacklist = unsolvable_dataset_blacklist + own_dataset_blacklist# + double_dataset_blacklist 
 
 result_files = os.listdir(result_dir)
 
@@ -76,7 +76,7 @@ for result_file in result_files:
 #%% optional: filter either datasets or methods for which not all methods are in:
     # Also filter blacklisted items.
 
-prune = "running"        
+prune = "methods"        
         
 for evaluation_metric in evaluation_metrics:
     metric_dfs[evaluation_metric].drop(method_blacklist, axis=0, inplace=True)
@@ -86,10 +86,10 @@ for evaluation_metric in evaluation_metrics:
         metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
     elif prune == "datasets":
         metric_dfs[evaluation_metric].dropna(axis=1, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
-    elif prune == "running":
-        running_dataset = metric_dfs[evaluation_metric].isna().sum().idxmax()
-        metric_dfs[evaluation_metric].drop(running_dataset, axis=1, inplace=True)
-        metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
+    #elif prune == "running":
+        #running_dataset = metric_dfs[evaluation_metric].isna().sum().idxmax() 
+        #metric_dfs[evaluation_metric].drop(running_dataset, axis=1, inplace=True)
+        #metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
         
 
     
@@ -163,18 +163,23 @@ table_file = open("tables/significance_results.tex","w")
 result_df.to_latex(table_file)
 table_file.close()
 
-#%% plot average percentage of maximum
+#%% plot average percentage of maximum for all datasets
 
-plot_df = (score_df/score_df.max()*100).melt(var_name="dataset", ignore_index=False).reset_index().rename(columns={"index":"method"})
+scaled_df = score_df/score_df.max()*100
+
+reordered_index_all = scaled_df.transpose().median().sort_values(ascending=False).index
+
+palette = dict(zip(reordered_index_all, sns.color_palette("husl", n_colors=len(reordered_index_all))))
+
+plot_df = (scaled_df).melt(var_name="dataset", ignore_index=False).reset_index().rename(columns={"index":"method"})
 plt.figure()
-ax = sns.boxplot(x="method",y="value",data=plot_df)
+ax = sns.boxplot(x="method",y="value",data=plot_df, order=reordered_index_all, palette=palette)
 ax.set_title("Percentage of maximum performance (ROC/AUC)")
-plt.xticks(rotation=45)
+plt.xticks(rotation=90)
 plt.tight_layout()
-plt.savefig("figures/ROCAUC_boxplot.eps",format="eps")
+plt.savefig("figures/ROCAUC_boxplot_all_datasets.eps",format="eps")
 plt.show()
 
-perc_of_max = (score_df/score_df.max()*100).transpose()
 
 
 #%% clustermap
@@ -184,7 +189,7 @@ plot_df = metric_dfs["ROC/AUC"].astype(float)
 
 clustermap = sns.clustermap(plot_df.transpose().iloc[:,:], method="average",metric="correlation", figsize=(15,15))
 
-clustermap.savefig("figures/clustermap_full_scores.eps",format="eps")
+clustermap.savefig("figures/clustermap_all_datasets.eps",format="eps")
 plt.show()
 
 
@@ -192,7 +197,7 @@ plt.show()
 
 #%% Local datasets
 
-local_datasets = ["parkinson", "wilt", "aloi_Goldstein", "vowels", "letter", "pen-local_Goldstein", "waveform", "glass", "ionosphere"]
+local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "waveform", "glass", "ionosphere"]
 
 
 score_df = metric_dfs["ROC/AUC"][local_datasets]
@@ -241,6 +246,22 @@ result_df = result_df.sort_values(by="Mean Performance", ascending=False).round(
 table_file = open("tables/significance_results_local.tex","w")
 result_df.to_latex(table_file)
 table_file.close()
+
+#%% Make boxplot for local datasets
+scaled_df = score_df/score_df.max()*100
+
+reordered_index_local = scaled_df.transpose().median().sort_values(ascending=False).index
+
+
+
+plot_df = (scaled_df).melt(var_name="dataset", ignore_index=False).reset_index().rename(columns={"index":"method"})
+plt.figure()
+ax = sns.boxplot(x="method",y="value",data=plot_df, order=reordered_index_local, palette=palette)
+ax.set_title("Percentage of maximum performance (ROC/AUC)")
+plt.xticks(rotation=90)
+plt.tight_layout()
+plt.savefig("figures/ROCAUC_boxplot_local_datasets.eps",format="eps")
+plt.show()
 
 #%% Global datasets
 
@@ -292,3 +313,19 @@ result_df = result_df.sort_values(by="Mean Performance", ascending=False).round(
 table_file = open("tables/significance_results_global.tex","w")
 result_df.to_latex(table_file)
 table_file.close()
+
+#%% Make boxplot for global datasets
+scaled_df = score_df/score_df.max()*100
+
+reordered_index = scaled_df.transpose().median().sort_values(ascending=False).index
+
+#scaled_df = scaled_df.loc[reordered_index]
+
+plot_df = (scaled_df).melt(var_name="dataset", ignore_index=False).reset_index().rename(columns={"index":"method"})
+plt.figure()
+ax = sns.boxplot(x="method",y="value",data=plot_df, order=reordered_index, palette=palette)
+ax.set_title("Percentage of maximum performance (ROC/AUC)")
+plt.xticks(rotation=90)
+plt.tight_layout()
+plt.savefig("figures/ROCAUC_boxplot_global_datasets.eps",format="eps")
+plt.show()
