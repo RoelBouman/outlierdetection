@@ -85,6 +85,8 @@ from pyod.models.sod import SOD
 #from pyod.models.sos import SOS #SOS also has memory allocation issues.
 from pyod.models.combination import maximization
 
+from wrappers import ExtendedIForest
+
 
 random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
 
@@ -92,21 +94,22 @@ random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
 
 #nested dict of methods and parameters
 methods = {
-        "ABOD":ABOD(method="fast", n_neighbors=40), 
-        "CBLOF":CBLOF(n_clusters=20,use_weights=True),
-        "u-CBLOF":CBLOF(n_clusters=20,use_weights=False),
-        "COF":COF(n_neighbors=20, method='fast'),
-        "COPOD":COPOD(),
-        "HBOS":HBOS(n_bins="auto"),
-        "kNN":KNN(n_neighbors=20,method="mean", metric="euclidean"),
-        "Isolation Forest":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
-        "LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state), #aad is the same as the MAD
-        "LODA":LODA(n_bins="auto"),
-        "LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(10,21)], combination_function=maximization),
-        "MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
-        "OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
-        "PCA":PCA(n_components=0.5, random_state=random_state), 
-        "SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8)#,
+        # "ABOD":ABOD(method="fast", n_neighbors=40), 
+        # "CBLOF":CBLOF(n_clusters=20,use_weights=True),
+        # "u-CBLOF":CBLOF(n_clusters=20,use_weights=False),
+        # "COF":COF(n_neighbors=20, method='fast'),
+        # "COPOD":COPOD(),
+        # "HBOS":HBOS(n_bins="auto"),
+        # "kNN":KNN(n_neighbors=20,method="mean", metric="euclidean"),
+        # "Isolation Forest":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
+        # "LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state), #aad is the same as the MAD
+        # "LODA":LODA(n_bins="auto"),
+        # "LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(10,21)], combination_function=maximization),
+        # "MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
+        # "OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75), #gamma="auto"  is the same as gamma=1/d, 
+        # "PCA":PCA(n_components=0.5, random_state=random_state), 
+        # "SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8)#,
+        "EIF":ExtendedIForest(n_estimators=1000)
         }
 
 #%% loop over all data, but do not reproduce existing results
