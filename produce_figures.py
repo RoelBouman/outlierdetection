@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from scipy.stats import friedmanchisquare
+import scipy.stats
 from scikit_posthocs import posthoc_nemenyi_friedman
 import math
 sns.set()
@@ -14,7 +15,7 @@ result_dir = "result_dir"
 figure_dir = "figures"
 
 method_blacklist = []
-#double_dataset_blacklist = ["letter_Goldstein", "annthyroid_Goldstein","wbc_Goldstein", "satellite_Goldstein"] #completely cluster together with ODDS datasets
+double_dataset_blacklist = ["annthyroid"] #completely cluster together with ODDS datasets
 unsolvable_dataset_blacklist = ["speech", "vertebral"]#, "speech_Goldstein"]
 own_dataset_blacklist = ["letter-recognition.data"] #own datasets for global/local verification
 dataset_blacklist = unsolvable_dataset_blacklist + own_dataset_blacklist# + double_dataset_blacklist 
@@ -36,6 +37,14 @@ def iman_davenport(rank_df): #could also return p-value, but would have to find 
     
     iman_davenport_stat = ((N-1)*friedman_stat)/(N*(k-1)-friedman_stat)
     return(iman_davenport_stat)
+
+def iman_davenport_critical_value(rank_df):
+    
+    N, k = rank_df.shape
+        
+    return(scipy.stats.f.ppf(0.05, k-1, (k-1)*(N-1)))
+        
+    
 
 #%%
 
@@ -69,9 +78,11 @@ for result_file in result_files:
     (data_name, method_name) = re.compile("(.*)_(.*?)_.*").match(result_file).groups()
         
     for evaluation_metric in evaluation_metrics: 
-    
-        metric_dfs[evaluation_metric][data_name][method_name] = partial_result[evaluation_metric][method_name]
-        
+        try: 
+            metric_dfs[evaluation_metric][data_name][method_name] = partial_result[evaluation_metric][method_name]
+        except KeyError:
+            if method_name == "IF":
+                metric_dfs[evaluation_metric][data_name][method_name] = partial_result[evaluation_metric]["Isolation Forest"]
         
 #%% optional: filter either datasets or methods for which not all methods are in:
     # Also filter blacklisted items.
@@ -104,7 +115,7 @@ def format_e(n):
 
 def p_value_to_string(p_value, n_decimals):
     if p_value < 1.0/(10**n_decimals):
-        return format_e(1.0/(10**n_decimals))
+        return "<" + format_e(1.0/(10**n_decimals))
     else:
         return str(round(p_value, n_decimals))
 
@@ -126,12 +137,14 @@ print(friedman_score)
 
 iman_davenport_score = iman_davenport(rank_df)
 
-print ("iman davenport score: " + str(iman_davenport_score))
+print("iman davenport score: " + str(iman_davenport_score))
+
+print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
 nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
-table_file = open("tables/nemenyi_table.tex","w")
+table_file = open("tables/nemenyi_table_all_datasets.tex","w")
 nemenyi_formatted.to_latex(table_file)
 table_file.close()
 
@@ -159,7 +172,7 @@ result_df["Outperforms"] = method_outperforms
 
 result_df = result_df.sort_values(by="Mean Performance", ascending=False).round(4)
 
-table_file = open("tables/significance_results.tex","w")
+table_file = open("tables/significance_results_all_datasets.tex","w")
 result_df.to_latex(table_file)
 table_file.close()
 
@@ -167,7 +180,7 @@ table_file.close()
 
 scaled_df = score_df/score_df.max()*100
 
-reordered_index_all = scaled_df.transpose().median().sort_values(ascending=False).index
+reordered_index_all = score_df.transpose().mean().sort_values(ascending=False).index
 
 palette = dict(zip(reordered_index_all, sns.color_palette("husl", n_colors=len(reordered_index_all))))
 
@@ -192,6 +205,54 @@ clustermap = sns.clustermap(plot_df.transpose().iloc[:,:], method="average",metr
 clustermap.savefig("figures/clustermap_all_datasets.eps",format="eps")
 plt.show()
 
+#%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10
+#import matplotlib as mpl
+
+# cmap = sns.color_palette("flare")
+# cmap = mpl.cm.viridis
+# cmap = mpl.colors.ListedColormap(sns.color_palette("flare").as_hex())
+# cmap = mpl.colors.ListedColormap([[1,1,1], [0.4,0,0.4], [0,0,1]]).reversed()
+# bounds = [0, 0.05, 0.10, 1]
+# norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='neither')
+
+# sns.heatmap(nemenyi_table[reordered_index_global].loc[reordered_index_global], cmap = cmap, norm=norm, cbar_kws={"label":"p-value"})
+# plt.show()
+
+significance_table = nemenyi_table.astype(str)
+
+for method in nemenyi_table.columns:
+    for competing_method in nemenyi_table.columns:
+        if nemenyi_table[method].loc[competing_method] < 0.10:
+            if nemenyi_table[method].loc[competing_method] < 0.05:
+                if result_df["Mean Performance"][method] > result_df["Mean Performance"][competing_method]:
+                    significance_table.loc[method,competing_method] = "++"
+                else:
+                    significance_table.loc[method,competing_method] = "-{}-"
+            else:
+                if result_df["Mean Performance"][method] > result_df["Mean Performance"][competing_method]:
+                    significance_table.loc[method,competing_method] = "+"
+                else:
+                    significance_table.loc[method,competing_method] = "-"
+        else:
+            significance_table.loc[method,competing_method] = ""
+            
+    
+
+significance_table = significance_table[reversed(reordered_index_all)].loc[reordered_index_all]
+table_file = open("tables/nemenyi_summary.tex","w")
+significance_table.to_latex(table_file)
+table_file.close()
+
+significance_table_truncated = significance_table.loc[:, (significance_table == "++").any() | (significance_table == "+").any()]
+
+significance_table_truncated["Mean Performance"] = score_df.transpose().mean().sort_values(ascending=False).round(3)
+
+table_file = open("tables/nemenyi_summary_truncated.tex","w")
+column_format = "l" + "c"*(len(significance_table_truncated.columns)-1) +"|r"
+header = ["\\rot{"+column+"}" for column in significance_table_truncated.columns[:-1]] + ["\\rot{\\shortstack[l]{\\textbf{Mean}\\\\\\textbf{AUC}}}"]
+significance_table_truncated.to_latex(table_file, column_format=column_format, header=header, escape=False)
+table_file.close()
+
 
 #%% Redo nemenyi test and pairwise testing based on the clustering
 
@@ -211,6 +272,7 @@ print(friedman_score)
 iman_davenport_score = iman_davenport(rank_df)
 
 print ("iman davenport score local: " + str(iman_davenport_score))
+print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
 nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
@@ -250,7 +312,7 @@ table_file.close()
 #%% Make boxplot for local datasets
 scaled_df = score_df/score_df.max()*100
 
-reordered_index_local = scaled_df.transpose().median().sort_values(ascending=False).index
+reordered_index_local = score_df.transpose().mean().sort_values(ascending=False).index
 
 
 
@@ -262,6 +324,55 @@ plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot_local_datasets.eps",format="eps")
 plt.show()
+
+#%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10
+#import matplotlib as mpl
+
+# cmap = sns.color_palette("flare")
+# cmap = mpl.cm.viridis
+# cmap = mpl.colors.ListedColormap(sns.color_palette("flare").as_hex())
+# cmap = mpl.colors.ListedColormap([[1,1,1], [0.4,0,0.4], [0,0,1]]).reversed()
+# bounds = [0, 0.05, 0.10, 1]
+# norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='neither')
+
+# sns.heatmap(nemenyi_table[reordered_index_global].loc[reordered_index_global], cmap = cmap, norm=norm, cbar_kws={"label":"p-value"})
+# plt.show()
+
+significance_table = nemenyi_table.astype(str)
+
+for method in nemenyi_table.columns:
+    for competing_method in nemenyi_table.columns:
+        if nemenyi_table[method].loc[competing_method] < 0.10:
+            if nemenyi_table[method].loc[competing_method] < 0.05:
+                if result_df["Mean Performance"][method] > result_df["Mean Performance"][competing_method]:
+                    significance_table.loc[method,competing_method] = "++"
+                else:
+                    significance_table.loc[method,competing_method] = "-{}-"
+            else:
+                if result_df["Mean Performance"][method] > result_df["Mean Performance"][competing_method]:
+                    significance_table.loc[method,competing_method] = "+"
+                else:
+                    significance_table.loc[method,competing_method] = "-"
+        else:
+            significance_table.loc[method,competing_method] = ""
+            
+
+significance_table = significance_table[reversed(reordered_index_local)].loc[reordered_index_local]
+table_file = open("tables/nemenyi_summary_local.tex","w")
+significance_table.to_latex(table_file)
+table_file.close()
+
+significance_table_truncated = significance_table.loc[:, (significance_table == "++").any() | (significance_table == "+").any()]
+
+
+significance_table_truncated["Mean Performance"] = score_df.transpose().mean().sort_values(ascending=False).round(3)
+
+table_file = open("tables/nemenyi_summary_local_truncated.tex","w")
+column_format = "l" + "c"*(len(significance_table_truncated.columns)-1) +"|r"
+header = ["\\rot{"+column+"}" for column in significance_table_truncated.columns[:-1]] + ["\\rot{\\shortstack[l]{\\textbf{Mean}\\\\\\textbf{AUC}}}"]
+significance_table_truncated.to_latex(table_file, column_format=column_format, header=header, escape=False)
+table_file.close()
+
 
 #%% Global datasets
 
@@ -278,6 +389,7 @@ print(friedman_score)
 iman_davenport_score = iman_davenport(rank_df)
 
 print ("iman davenport score global: " + str(iman_davenport_score))
+print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
 nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
@@ -285,6 +397,9 @@ nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_deci
 table_file = open("tables/nemenyi_table_global.tex","w")
 nemenyi_formatted.to_latex(table_file)
 table_file.close()
+
+
+
 
 #%% Make table summarizing significance and performance results for global datasets
 
@@ -317,15 +432,62 @@ table_file.close()
 #%% Make boxplot for global datasets
 scaled_df = score_df/score_df.max()*100
 
-reordered_index = scaled_df.transpose().median().sort_values(ascending=False).index
+reordered_index_global = score_df.transpose().mean().sort_values(ascending=False).index
 
 #scaled_df = scaled_df.loc[reordered_index]
 
 plot_df = (scaled_df).melt(var_name="dataset", ignore_index=False).reset_index().rename(columns={"index":"method"})
 plt.figure()
-ax = sns.boxplot(x="method",y="value",data=plot_df, order=reordered_index, palette=palette)
+ax = sns.boxplot(x="method",y="value",data=plot_df, order=reordered_index_global, palette=palette)
 ax.set_title("Percentage of maximum performance (ROC/AUC)")
 plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot_global_datasets.eps",format="eps")
 plt.show()
+
+#%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10
+#import matplotlib as mpl
+
+# cmap = sns.color_palette("flare")
+# cmap = mpl.cm.viridis
+# cmap = mpl.colors.ListedColormap(sns.color_palette("flare").as_hex())
+# cmap = mpl.colors.ListedColormap([[1,1,1], [0.4,0,0.4], [0,0,1]]).reversed()
+# bounds = [0, 0.05, 0.10, 1]
+# norm = mpl.colors.BoundaryNorm(bounds, cmap.N, extend='neither')
+
+# sns.heatmap(nemenyi_table[reordered_index_global].loc[reordered_index_global], cmap = cmap, norm=norm, cbar_kws={"label":"p-value"})
+# plt.show()
+
+significance_table = nemenyi_table.astype(str)
+
+for method in nemenyi_table.columns:
+    for competing_method in nemenyi_table.columns:
+        if nemenyi_table[method].loc[competing_method] < 0.10:
+            if nemenyi_table[method].loc[competing_method] < 0.05:
+                if result_df["Mean Performance"][method] > result_df["Mean Performance"][competing_method]:
+                    significance_table.loc[method,competing_method] = "++"
+                else:
+                    significance_table.loc[method,competing_method] = "-{}-"
+            else:
+                if result_df["Mean Performance"][method] > result_df["Mean Performance"][competing_method]:
+                    significance_table.loc[method,competing_method] = "+"
+                else:
+                    significance_table.loc[method,competing_method] = "-"
+        else:
+            significance_table.loc[method,competing_method] = ""
+            
+
+significance_table = significance_table[reversed(reordered_index_global)].loc[reordered_index_global]
+table_file = open("tables/nemenyi_summary_global.tex","w")
+significance_table.to_latex(table_file)
+table_file.close()
+
+significance_table_truncated = significance_table.loc[:, (significance_table == "++").any() | (significance_table == "+").any()]
+
+significance_table_truncated["Mean Performance"] = score_df.transpose().mean().sort_values(ascending=False).round(3)
+
+table_file = open("tables/nemenyi_summary_global_truncated.tex","w")
+column_format = "l" + "c"*(len(significance_table_truncated.columns)-1) +"|r"
+header = ["\\rot{"+column+"}" for column in significance_table_truncated.columns[:-1]] + ["\\rot{\\shortstack[l]{\\textbf{Mean}\\\\\\textbf{AUC}}}"]
+significance_table_truncated.to_latex(table_file, column_format=column_format, header=header, escape=False)
+table_file.close()
