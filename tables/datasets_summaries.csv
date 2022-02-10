@@ -1,8 +1,6 @@
 Name,Origin,#samples,#variables,#outliers,%outliers,#removed duplicates
 aloi,Goldstein,49533,27,1507,(3.04%),466
-annthyroid,ODDS,7062,6,534,(7.56%),138
 arrhythmia,ODDS,452,274,66,(14.6%),0
-breast-cancer,Goldstein,366,30,9,(2.46%),0
 cardio,ODDS,1822,21,175,(9.6%),9
 cover,ODDS,286048,10,2747,(0.96%),0
 glass,ODDS,213,9,9,(4.23%),1
