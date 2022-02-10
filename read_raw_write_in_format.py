@@ -87,7 +87,7 @@ nonmat_data_dir = "ODDS_data_raw/other_data"
 matfile_names = os.listdir(data_dir)
 
 HDFlist = ["http.mat", "smtp.mat"] #use MATLAB 7.3 file format (need HDF reader)
-black_list = ["ecoli.mat", "breastw.mat", "lympho.mat"] #ecoli is broken, lympho is removed due to being categorical, breastw has too many outliers %-wise, this is fixed in wbc
+black_list = ["ecoli.mat", "breastw.mat", "lympho.mat", "annthyroid.mat"] #ecoli is broken, lympho is removed due to being categorical, breastw has too many outliers %-wise, this is fixed in wbc
 
 train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
@@ -367,8 +367,6 @@ summaries_df = summaries_df.drop(["#numeric variables", "#categorical variables"
 
 summaries_df.to_csv("tables/datasets_summaries.csv", index=False)
 
-latex_table = summaries_df.style.to_latex(label="table:datasets")
-
 table_file = open("tables/datasets_table.tex","w")
-summaries_df.style.to_latex(table_file, label="table:datasets")
+summaries_df.to_latex(table_file, index=False) 
 table_file.close()
