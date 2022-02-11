@@ -129,6 +129,14 @@ def p_value_to_string(p_value, n_decimals):
 n_decimals = 3
 
 score_df = metric_dfs["ROC/AUC"]
+
+
+header = ["\\rot{"+column+"}" for column in score_df.columns]
+table_file = open("tables/AUC_all_datasets.tex","w")
+score_df.astype(float).round(2).to_latex(table_file, header=header, escape=False)
+table_file.close()
+
+
 rank_df = score_to_rank(score_df)
 
 friedman_score = friedman(rank_df)
@@ -145,7 +153,7 @@ nemenyi_table = posthoc_nemenyi_friedman(rank_df)
 nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
 table_file = open("tables/nemenyi_table_all_datasets.tex","w")
-nemenyi_formatted.to_latex(table_file)
+nemenyi_formatted.to_latex(table_file, hrules=True)
 table_file.close()
 
 #%% Make table summarizing significance and performance results
@@ -262,6 +270,7 @@ local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", 
 
 
 score_df = metric_dfs["ROC/AUC"][local_datasets]
+
 rank_df = score_to_rank(score_df)
 
 friedman_score = friedman(rank_df)
@@ -278,7 +287,7 @@ nemenyi_table = posthoc_nemenyi_friedman(rank_df)
 nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
 table_file = open("tables/nemenyi_table_local.tex","w")
-nemenyi_formatted.to_latex(table_file)
+nemenyi_formatted.to_latex(table_file, hrules=True)
 table_file.close()
 
 #%% Make table summarizing significance and performance results for local datasets
@@ -379,6 +388,7 @@ table_file.close()
 score_df = metric_dfs["ROC/AUC"]
 global_datasets = score_df.columns.difference(local_datasets)
 score_df = score_df[global_datasets]
+
 rank_df = score_to_rank(score_df)
 
 friedman_score = friedman(rank_df)
@@ -395,7 +405,7 @@ nemenyi_table = posthoc_nemenyi_friedman(rank_df)
 nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
 table_file = open("tables/nemenyi_table_global.tex","w")
-nemenyi_formatted.to_latex(table_file)
+nemenyi_formatted.to_latex(table_file, hrules=True)
 table_file.close()
 
 
