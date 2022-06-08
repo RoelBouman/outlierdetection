@@ -9,7 +9,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import RobustScaler
 from evaluation_metrics import adjusted_precision_n_scores, average_precision, adjusted_average_precision
 
-pickle_dir = "formatted_OD_data"
+pickle_dir = "formatted_data"
 result_dir = "result_dir"
 csvresult_dir = "csvresult_dir"
 score_dir = "score_dir"
