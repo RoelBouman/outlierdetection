@@ -11,6 +11,7 @@ from sklearn.model_selection import ParameterGrid
 from evaluation_metrics import adjusted_precision_n_scores, average_precision, adjusted_average_precision
 
 pickle_dir = "formatted_data"
+base_result_dir = "results"
 result_dir = "result_dir"
 csvresult_dir = "csvresult_dir"
 score_dir = "score_dir"
@@ -115,21 +116,9 @@ method_parameters = {
 #%% loop over all data, but do not reproduce existing results
 
 
-#make pickle file directory
-target_dir = os.path.join(result_dir)
-
-if not os.path.exists(target_dir):
-    os.makedirs(target_dir)
-    
-#make csv directory
-target_csvdir = os.path.join(csvresult_dir)
-
-if not os.path.exists(target_csvdir):
-    os.makedirs(target_csvdir)
-    
-    
-#make outlier scores direcetory
-score_csvdir = os.path.join(score_dir)
+target_dir = os.path.join(base_result_dir, result_dir)
+target_csvdir = os.path.join(base_result_dir, csvresult_dir)
+score_csvdir = os.path.join(base_result_dir, score_dir)
 
 if not os.path.exists(score_csvdir):
     os.makedirs(score_csvdir)
@@ -193,14 +182,13 @@ for picklefile_name in picklefile_names:
                     pickle.dump(method_performance_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
                 
                 #also write csv files for easy manual inspection
-                full_target_csvdir = os.path.join(target_dir, picklefile_name.replace(".pickle", ""), method_name)
+                full_target_csvdir = os.path.join(target_csvdir, picklefile_name.replace(".pickle", ""), method_name)
                 os.makedirs(full_target_csvdir, exist_ok=True)
                 target_csvfile_name = os.path.join(full_target_csvdir, hyperparameter_string+".csv")
                 method_performance_df.to_csv(target_csvfile_name)
                 
-                full_target_scoredir = os.path.join(target_dir, picklefile_name.replace(".pickle", ""), method_name)
+                full_target_scoredir = os.path.join(score_csvdir, picklefile_name.replace(".pickle", ""), method_name)
                 os.makedirs(full_target_scoredir, exist_ok=True)
                 target_scorefile_name = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
-                np.savetxt(target_file_name, outlier_scores)
-        print("finished: " + method_name)
+                np.savetxt(target_scorefile_name, outlier_scores)
 
