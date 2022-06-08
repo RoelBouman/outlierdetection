@@ -18,7 +18,7 @@ import numpy as np
 
 #Note, PREDICT is not implemented properly yet. It looks only to 1 matrix of input data at a time.
 class ODIN(BaseDetector):
-      """Connectivity-Based Outlier Factor (COF) COF uses the ratio of average
+    """Connectivity-Based Outlier Factor (COF) COF uses the ratio of average
     chaining distance of data point and the average of average chaining
     distance of k nearest neighbor of the data point, as the outlier score
     for observations.
@@ -75,8 +75,7 @@ class ODIN(BaseDetector):
 
     n_neighbors_: int
         Number of neighbors to use by default for k neighbors queries.
-    """ 
-
+    """
     def __init__(self, n_neighbors=20,
                  metric='minkowski', p=2, metric_params=None,
                  contamination=0.1, n_jobs=None):

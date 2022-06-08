@@ -14,7 +14,9 @@ import time
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-from iforest import IsolationForest
+from .iforest import IsolationForest
+
+from pyod.utils.utility import invert_order
 
 
 class gen2Out:
@@ -38,7 +40,7 @@ class gen2Out:
 		y, x = np.histogram(depths, bins=bins)
 		return i, x[np.argmax(y)]
 
-	def fit(self, X):
+	def fit(self, X, y=None):
 		if self.random_state:
 			np.random.seed(self.random_state)
 		self.n_sample = X.shape[0]
@@ -73,7 +75,7 @@ class gen2Out:
 					   / (len(self.clf.estimators_)
 						  * self.average_path_length([self.n_sample])))
 		
-		return scores
+		return invert_order(scores)
 
 	def point_anomaly_scores(self, X):
 		self = self.fit(X)

@@ -86,9 +86,11 @@ from pyod.models.ecod import ECOD
 #from pyod.models.sos import SOS #SOS also has memory allocation issues.
 from pyod.models.combination import maximization
 
-from wrappers import ExtendedIForest
-from additional_methods import ODIN
+from additional_methods.wrappers import ExtendedIForest
+from additional_methods.ODIN import ODIN
 
+
+from additional_methods.gen2out.gen2out import gen2Out
 
 random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
 
@@ -103,7 +105,7 @@ methods = {
         "COPOD":COPOD(),
         "HBOS":HBOS(n_bins="auto"),
         "kNN":KNN(n_neighbors=20,method="mean", metric="euclidean"),
-        "Isolation Forest":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
+        "IF":IForest(n_estimators=1000, max_samples=256, random_state=random_state),
         "LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state), #aad is the same as the MAD
         "LODA":LODA(n_bins="auto"),
         "LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(10,21)], combination_function=maximization),
@@ -113,7 +115,8 @@ methods = {
         "SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8),
         "EIF":ExtendedIForest(n_estimators=1000, extension_level=1),
         "ODIN":ODIN(n_neighbors=20),
-        "ECOD":ECOD()
+        "ECOD":ECOD(),
+        "gen2out":gen2Out()
         }
 
 #%% loop over all data, but do not reproduce existing results
@@ -178,7 +181,10 @@ for picklefile_name in picklefile_names:
     
         pipeline.fit(X)
         
-        outlier_scores = pipeline[1].decision_scores_
+        if method_name == "gen2out":
+            outlier_scores = pipeline[1].decision_function(X)
+        else:
+            outlier_scores = pipeline[1].decision_scores_
         
         method_performance = {method_name:{score_name: score_function(y,outlier_scores) for (score_name, score_function) in score_functions.items()}}
         method_performance_df = pd.DataFrame(method_performance).transpose()
