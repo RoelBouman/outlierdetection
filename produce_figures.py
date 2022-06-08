@@ -152,9 +152,9 @@ print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
 nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
-table_file = open("tables/nemenyi_table_all_datasets.tex","w")
-nemenyi_formatted.to_latex(table_file, hrules=True)
-table_file.close()
+#table_file = open("tables/nemenyi_table_all_datasets.tex","w")
+nemenyi_formatted.to_latex("tables/nemenyi_table_all_datasets.tex", hrules=True)
+#table_file.close()
 
 #%% Make table summarizing significance and performance results
 
@@ -286,9 +286,9 @@ print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
 nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
-table_file = open("tables/nemenyi_table_local.tex","w")
-nemenyi_formatted.to_latex(table_file, hrules=True)
-table_file.close()
+#table_file = open("tables/nemenyi_table_local.tex","w")
+nemenyi_formatted.to_latex("tables/nemenyi_table_local.tex", hrules=True)
+#table_file.close()
 
 #%% Make table summarizing significance and performance results for local datasets
 
@@ -404,9 +404,9 @@ print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
 nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
-table_file = open("tables/nemenyi_table_global.tex","w")
-nemenyi_formatted.to_latex(table_file, hrules=True)
-table_file.close()
+#table_file = open("tables/nemenyi_table_global.tex","w")
+nemenyi_formatted.to_latex("tables/nemenyi_table_global.tex", hrules=True)
+#table_file.close()
 
 
 
