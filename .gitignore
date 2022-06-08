@@ -1,29 +1,12 @@
 
-formatted_OD_data/
+formatted_data/
 
-csvresult_dir_old/
+raw_data/
 
-result_dir_old/
-
-ELKI_data_raw/
-
-formatted_OD_data_ELKI_test/
-
-GAAL_data_raw/
-
-Goldstein_data_raw/
-
-ODDS_data_raw/
 
 result_dir/
 
 score_dir/
-
-speed_result_dir/
-
-UCI_data_key/
-
-UCI_data_raw/
 
 csvresult_dir/
 

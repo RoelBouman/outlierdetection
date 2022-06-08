@@ -16,8 +16,9 @@ import pickle
 import re
 import json
 
+raw_dir = "raw_data"
+target_dir = "formatted_data"
 
-target_dir = "formatted_OD_data"
 
 if not os.path.exists(target_dir):
     os.mkdir(target_dir)
@@ -80,8 +81,8 @@ def make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     
     return(summary)
 #%% ODDS
-data_dir = "ODDS_data_raw/matfile_data"
-nonmat_data_dir = "ODDS_data_raw/other_data"
+data_dir = os.path.join(raw_dir, "ODDS_data_raw", "matfile_data")
+nonmat_data_dir = os.path.join(raw_dir, "ODDS_data_raw", "other_data")
 
 
 matfile_names = os.listdir(data_dir)
@@ -91,7 +92,8 @@ black_list = ["ecoli.mat", "breastw.mat", "lympho.mat", "annthyroid.mat"] #ecoli
 
 train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
-with open("ODDS_data_raw/categorical_variables_per_dataset.json", "r") as json_file:
+json_meta_data_path = os.path.join(raw_dir, "ODDS_data_raw","categorical_variables_per_dataset.json")
+with open(json_meta_data_path, "r") as json_file:
     categorical_variables_per_dataset = json.load(json_file)
     
 origin = "ODDS"
@@ -195,7 +197,7 @@ target_file_name = re.search('(.+?)\.arff', file_name).group(1) + ".pickle"
 target_file_name_with_dir = os.path.join(target_dir, target_file_name)
 pickle.dump(data_dict, open(target_file_name_with_dir, "wb")) 
 
-#%% Yeast data is commented out due to being undocumented.
+#%% Yeast data is commented out due to being undocumented/unsolvable (see other comparison papers)
 # .data/csv files
 
 # file_name = "yeast.data"
@@ -231,8 +233,7 @@ pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
 #%% Goldstein CSV data
 
 
-data_dir = "Goldstein_data_raw"
-target_dir = "formatted_OD_data"
+data_dir = os.path.join(raw_dir, "Goldstein_data_raw")
 
 if not os.path.exists(target_dir):
     os.mkdir(target_dir)
@@ -274,8 +275,7 @@ for file_name in [f for f in csv_file_names if f not in black_list]:
 #%% GAAL CSV data
 
 
-data_dir = "GAAL_data_raw"
-target_dir = "formatted_OD_data"
+data_dir = os.path.join(raw_dir, "GAAL_data_raw")
 
 if not os.path.exists(target_dir):
     os.mkdir(target_dir)
@@ -318,8 +318,7 @@ for file_name in [f for f in csv_file_names if f not in black_list]:
 
 #%% Write ELKI data
 
-data_dir = "ELKI_data_raw"
-target_dir = "formatted_OD_data"
+data_dir = os.path.join(raw_dir, "ELKI_data_raw")
 
 if not os.path.exists(target_dir):
     os.mkdir(target_dir)
