@@ -1,0 +1,12 @@
+TODO:
+- Add datasets from Emmot et al.: https://ir.library.oregonstate.edu/concern/datasets/47429f155?locale=en
+- Add additional methods:
+	- Deep methods:
+		-AE
+		-VAE
+		-DeepSVDD
+	- Non deep:
+		- Robust KDE
+		- SVDD (https://github.com/iqiukp/SVDD-Python)
+		- Ensemble GMM
+
