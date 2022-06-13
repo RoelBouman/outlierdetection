@@ -32,6 +32,8 @@ score_functions = {"ROC/AUC": roc_auc_score,
                    "average_precision": average_precision, 
                    "adjusted_average_precision": adjusted_average_precision}
 
+
+verbose = True
 #%% Define ensemble class for LOF
 
 #%% Define parameter settings and methods
@@ -62,53 +64,55 @@ from additional_methods.gen2out.gen2out import gen2Out
 
 random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
 
-
+ensemble_LOF_krange = range(5,31)
 
 #dict of methods and functions
 method_classes = {
-        # "ABOD":ABOD(method="fast", n_neighbors=40), 
-        # "CBLOF":CBLOF(n_clusters=20,use_weights=True),
-        # "u-CBLOF":CBLOF(n_clusters=20,use_weights=False),
+        "ABOD":ABOD, 
+        #"CBLOF":CBLOF,
+        #"u-CBLOF":CBLOF,
         # "COF":COF(n_neighbors=20, method='fast'),
-        # "COPOD":COPOD(),
+        "COPOD":COPOD,
         "HBOS":HBOS,
         "kNN":KNN,
         "kth-NN":KNN,
-        "IF":IForest
+        "IF":IForest,
         # "LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state),
         # "LODA":LODA(n_bins="auto"),
-        # "LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(10,21)], combination_function=maximization),
+        "ensemble-LOF":Ensemble,
+        "LOF":LOF,
         # "MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
         # "OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75),
-        # "PCA":PCA(n_components=0.5, random_state=random_state), 
+        "PCA":PCA, 
         # "SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8),
-        # "EIF":ExtendedIForest(n_estimators=1000, extension_level=1),
-        # "ODIN":ODIN(n_neighbors=20),
-        # "ECOD":ECOD(),
+        "EIF":ExtendedIForest,
+        "ODIN":ODIN,
+        "ECOD":ECOD
         # "gen2out":gen2Out()
         }
 
 #dict of methods and parameters
 method_parameters = {
-        # "ABOD":, 
-        # "CBLOF":,
-        # "u-CBLOF":,
+        "ABOD":{"method":["fast"], "n_neighbors":[60]}, 
+        #"CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
+        #"u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
         # "COF":,
-        # "COPOD":,
+        "COPOD":{},
         "HBOS":{"n_bins":["auto"]},
         "kNN":{"n_neighbors":range(5,31), "method":["mean"]},
         "kth-NN":{"n_neighbors":range(5,31), "method":["largest"]},
-        "IF":{"n_estimators":[1000], "max_samples":[128,256,512,1024]}
+        "IF":{"n_estimators":[1000], "max_samples":[128,256,512,1024]},
         # "LMDD":, #aad is the same as the MAD
         # "LODA":,
-        # "ensemble-LOF":Ensemble(estimators=[LOF(n_neighbors=k) for k in range(3,21)], combination_function=maximization),
-        # "MCD":,
+        "ensemble-LOF":{"estimators":[[LOF(n_neighbors=k) for k in ensemble_LOF_krange]], "combination_function":[maximization]},
+        "LOF":{"n_neighbors":range(5,31)},
+        "MCD":{"support_fraction":[0.6,0.7,0.8,0.9], "assume_centered":[True]},
         # "OCSVM": #gamma="auto"  is the same as gamma=1/d, 
-        # "PCA":, 
+         "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
         # "SOD":,
-        # "EIF":{"n_estimators":[1000], "extension_level":[1,2,3]},
-        # "ODIN":,
-        # "ECOD":{},
+        "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
+        "ODIN":{"n_neighbors":range(5,31)},
+        "ECOD":{}
         # "gen2out":
         }
 
@@ -148,14 +152,22 @@ for picklefile_name in picklefile_names:
         #loop over hyperparameter settings
         for hyperparameter_setting in hyperparameter_list:
             
-            hyperparameter_string = str(hyperparameter_setting)
-            print(hyperparameter_string)
+            if method_name == "ensemble-LOF":
+                hyperparameter_string = str(ensemble_LOF_krange)
+            else:
+                hyperparameter_string = str(hyperparameter_setting)
+                
+            if verbose:
+                print(hyperparameter_string)
             
             #check whether results have  been calculated
             full_target_dir = os.path.join(target_dir, picklefile_name.replace(".pickle", ""), method_name)
             target_file_name = os.path.join(target_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".pickle")
             if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
-                print(" results already calculated, skipping recalculation")
+                if verbose:
+                    print(" results already calculated, skipping recalculation")
+            elif method_name == "EIF" and X.shape[1] <= hyperparameter_setting["extension_level"]:
+                print("Dimensionality of dataset higher than EIF extension level, skipping...")
             else:
                 
                 OD_method = OD_class(**hyperparameter_setting)
@@ -170,7 +182,7 @@ for picklefile_name in picklefile_names:
                 
                 #correct for non pyod-like behaviour from gen2out
                 if method_name == "gen2out":
-                    outlier_scores = pipeline[1].decision_function(X)
+                    outlier_scores = pipeline[1].decision_function(pipeline.transform(X))
                 else:
                     outlier_scores = pipeline[1].decision_scores_
                 
