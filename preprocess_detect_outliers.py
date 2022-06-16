@@ -69,22 +69,22 @@ ensemble_LOF_krange = range(5,31)
 #dict of methods and functions
 method_classes = {
         "ABOD":ABOD, 
-        #"CBLOF":CBLOF,
-        #"u-CBLOF":CBLOF,
-        # "COF":COF(n_neighbors=20, method='fast'),
+        "CBLOF":CBLOF,
+        "u-CBLOF":CBLOF,
+        "COF":COF,
         "COPOD":COPOD,
         "HBOS":HBOS,
         "kNN":KNN,
         "kth-NN":KNN,
         "IF":IForest,
-        # "LMDD":LMDD(n_iter=100,dis_measure="aad", random_state=random_state),
-        # "LODA":LODA(n_bins="auto"),
+        "LMDD":LMDD,
+        "LODA":LODA,
         "ensemble-LOF":Ensemble,
         "LOF":LOF,
-        # "MCD":MCD(support_fraction=0.75, assume_centered=True, random_state=random_state),
-        # "OCSVM":OCSVM(kernel="rbf", gamma="auto", nu=0.75),
+        "MCD":MCD,
+        "OCSVM":OCSVM,
         "PCA":PCA, 
-        # "SOD":SOD(n_neighbors=30, ref_set=20, alpha=0.8),
+        "SOD":SOD,
         "EIF":ExtendedIForest,
         "ODIN":ODIN,
         "ECOD":ECOD
@@ -94,22 +94,22 @@ method_classes = {
 #dict of methods and parameters
 method_parameters = {
         "ABOD":{"method":["fast"], "n_neighbors":[60]}, 
-        #"CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
-        #"u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
-        # "COF":,
+        "CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
+        "u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
+        "COF":{"n_neighbors":range(5,31)},
         "COPOD":{},
         "HBOS":{"n_bins":["auto"]},
         "kNN":{"n_neighbors":range(5,31), "method":["mean"]},
         "kth-NN":{"n_neighbors":range(5,31), "method":["largest"]},
         "IF":{"n_estimators":[1000], "max_samples":[128,256,512,1024]},
-        # "LMDD":, #aad is the same as the MAD
-        # "LODA":,
+        "LMDD":{"n_iter":100,"dis_measure":"aad"}, #aad is the same as the MAD
+        "LODA":{"n_bins":["auto"]},
         "ensemble-LOF":{"estimators":[[LOF(n_neighbors=k) for k in ensemble_LOF_krange]], "combination_function":[maximization]},
         "LOF":{"n_neighbors":range(5,31)},
         "MCD":{"support_fraction":[0.6,0.7,0.8,0.9], "assume_centered":[True]},
-        # "OCSVM": #gamma="auto"  is the same as gamma=1/d, 
+        "OCSVM":{"kernel":["rbf"], "gamma":["auto"], "nu":[0.5,0.6,0.7,0.8,0.9]},
          "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
-        # "SOD":,
+        "SOD":{"n_neighbors":range(15,31), "ref_set":range(5,15), "alpha":[0.6,0.7,0.8,0.8]},
         "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
         "ODIN":{"n_neighbors":range(5,31)},
         "ECOD":{}
@@ -170,6 +170,11 @@ for picklefile_name in picklefile_names:
                 print("Dimensionality of dataset higher than EIF extension level, skipping...")
             else:
                 
+                #use memory efficient COF when too many samples:
+                if method_name =="COF" and X.shape[0] > 8000:
+                    hyperparameter_setting["method"] = "memory"
+                
+                
                 OD_method = OD_class(**hyperparameter_setting)
                 
                 #Temporary fix for ECOD:
@@ -177,8 +182,15 @@ for picklefile_name in picklefile_names:
                     delattr(OD_method, "X_train")
                     
                 pipeline = make_pipeline(RobustScaler(), OD_method)
-            
-                pipeline.fit(X)
+                
+                try:
+                    pipeline.fit(X)
+                except ValueError as e: #Catch error when CBLOF fails due to configuration
+                    if str(e) == "Could not form valid cluster separation. Please change n_clusters or change clustering method":
+                        print("Separation invalid, skipping this hyperparameter setting")
+                        continue
+                    else:
+                        raise e
                 
                 #correct for non pyod-like behaviour from gen2out
                 if method_name == "gen2out":
