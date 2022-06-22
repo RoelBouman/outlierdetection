@@ -96,7 +96,7 @@ method_parameters = {
         "ABOD":{"method":["fast"], "n_neighbors":[60]}, 
         "CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
         "u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
-        #"COF":{"n_neighbors":range(5,31)},
+        "COF":{"n_neighbors":[5,10,15,20,25,30]},
         "COPOD":{},
         "HBOS":{"n_bins":["auto"]},
         "kNN":{"n_neighbors":range(5,31), "method":["mean"]},
@@ -109,7 +109,7 @@ method_parameters = {
         "MCD":{"support_fraction":[0.6,0.7,0.8,0.9], "assume_centered":[True]},
         "OCSVM":{"kernel":["rbf"], "gamma":["auto"], "nu":[0.5,0.6,0.7,0.8,0.9]},
          "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
-        "SOD":{"n_neighbors":range(15,31), "ref_set":range(5,15), "alpha":[0.6,0.7,0.8,0.8]},
+        "SOD":{"n_neighbors":[20, 25 ,30], "ref_set":[10,14,18], "alpha":[0.7,0.8,0.9]},
         "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
         "ODIN":{"n_neighbors":range(5,31)},
         "ECOD":{}
