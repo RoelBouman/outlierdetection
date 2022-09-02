@@ -9,8 +9,14 @@ import scipy.stats
 from scikit_posthocs import posthoc_nemenyi_friedman
 sns.set()
 
+prune = "datasets"        
+
 result_dir = "results/result_dir"
 figure_dir = "figures"
+table_dir = "tables"
+
+os.makedirs(table_dir, exist_ok=True)
+os.makedirs(figure_dir, exist_ok=True)
 
 method_blacklist = []
 double_dataset_blacklist = ["annthyroid"] #completely cluster together with ODDS datasets
@@ -50,21 +56,35 @@ datasets = os.listdir(result_dir)
     
 methods_per_dataset = []
 
+method_count_per_dataset = {}
+max_methods = 0
 for dataset in datasets:
     method_folders = os.listdir(os.path.join(result_dir, dataset))
     
     methods_per_dataset.append(set(method_folders))
     
+    method_count_per_dataset[dataset] = len(method_folders)
+    
+    if method_count_per_dataset[dataset] > max_methods:
+        max_methods = method_count_per_dataset[dataset]
 
-methods = set.intersection(*methods_per_dataset)
 
-incomplete_methods = set([x for xs in methods_per_dataset for x in xs]).difference(methods)
+if prune == "methods":
+    methods = set.intersection(*methods_per_dataset)
+    
+    incomplete_methods = set([x for xs in methods_per_dataset for x in xs]).difference(methods)
+    
+    if len(incomplete_methods) > 0:
+        print("The following methods were not calculated for each dataset:")
+        print(incomplete_methods)
+    
+    methods = list(methods)
+elif prune == "datasets":
+    methods = set.union(*methods_per_dataset)
+    
+    datasets = [m  for m in method_count_per_dataset if method_count_per_dataset[m] == max_methods]
 
-if len(incomplete_methods) > 0:
-    print("The following methods were not calculated for each dataset:")
-    print(incomplete_methods)
 
-methods = list(methods)
 
 
 #%% Read all metrics from files
@@ -105,7 +125,7 @@ for dataset_name in datasets:
 #%% optional: filter either datasets or methods for which not all methods are in:
     # Also filter blacklisted items.
 
-prune = "methods"        
+
         
 for evaluation_metric in evaluation_metrics:
     metric_dfs[evaluation_metric].drop(method_blacklist, axis=0, inplace=True, errors="ignore")
