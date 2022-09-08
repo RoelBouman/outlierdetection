@@ -15,6 +15,7 @@ base_result_dir = "results"
 result_dir = "result_dir"
 csvresult_dir = "csvresult_dir"
 score_dir = "score_dir"
+log_dir = "logs"
 
 #picklefile_names = os.listdir(pickle_dir)
 
@@ -84,7 +85,7 @@ method_classes = {
         "MCD":MCD,
         "OCSVM":OCSVM,
         "PCA":PCA, 
-        "SOD":SOD,
+        #"SOD":SOD,
         "EIF":ExtendedIForest,
         "ODIN":ODIN,
         "ECOD":ECOD
@@ -96,7 +97,7 @@ method_parameters = {
         "ABOD":{"method":["fast"], "n_neighbors":[60]}, 
         "CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
         "u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
-        "COF":{"n_neighbors":[5,10,15,20,25,30]},
+        #"COF":{"n_neighbors":[5,10,15,20,25,30]},
         "COPOD":{},
         "HBOS":{"n_bins":["auto"]},
         "kNN":{"n_neighbors":range(5,31), "method":["mean"]},
@@ -109,7 +110,7 @@ method_parameters = {
         "MCD":{"support_fraction":[0.6,0.7,0.8,0.9], "assume_centered":[True]},
         "OCSVM":{"kernel":["rbf"], "gamma":["auto"], "nu":[0.5,0.6,0.7,0.8,0.9]},
          "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
-        "SOD":{"n_neighbors":[20, 25 ,30], "ref_set":[10,14,18], "alpha":[0.7,0.8,0.9]},
+        #"SOD":{"n_neighbors":[20, 25 ,30], "ref_set":[10,14,18], "alpha":[0.7,0.8,0.9]},
         "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
         "ODIN":{"n_neighbors":range(5,31)},
         "ECOD":{}
@@ -215,4 +216,28 @@ for picklefile_name in picklefile_names:
                 os.makedirs(full_target_scoredir, exist_ok=True)
                 target_scorefile_name = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
                 np.savetxt(target_scorefile_name, outlier_scores)
+                
+                #write Keras history
+                if method_name in ["VAE", "beta-VAE", "AE", "AnoGAN"]:
+                    if method_name == "AnoGAN":
+                        history_df = pd.DataFrame({"discriminator_loss":pipeline[1].hist_loss_discriminator, "generator_loss":pipeline[1].hist_loss_generator})
+                    else:
+                        history = pipeline[1].history_
+                        history_df = pd.DataFrame(history)
+
+
+                    
+                    full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
+                    target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".pickle")
+                    
+                    os.makedirs(full_target_dir, exist_ok=True)
+                    with open(target_file_name, 'wb') as handle:
+                        pickle.dump(method_performance_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                        
+                    full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
+                    target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".csv")
+                    
+                    os.makedirs(full_target_dir, exist_ok=True)
+                    with open(target_file_name, 'wb') as handle:
+                        history_df.to_csv(handle)
 
