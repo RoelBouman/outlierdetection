@@ -59,11 +59,14 @@ from pyod.models.ecod import ECOD
 from pyod.models.combination import maximization
 
 from additional_methods.ensemble import  Ensemble
-from additional_methods.wrappers import ExtendedIForest
+from additional_methods.wrappers.ExtendedIForest import ExtendedIForest
 from additional_methods.ODIN import ODIN
 from additional_methods.gen2out.gen2out import gen2Out
 
-random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
+from additional_methods.wrappers.AE import AE_wrapper
+from additional_methods.wrappers.VAE import VAE_wrapper
+from additional_methods.wrappers.AnoGAN import AnoGAN_wrapper
+
 
 ensemble_LOF_krange = range(5,31)
 
@@ -88,8 +91,18 @@ method_classes = {
         #"SOD":SOD,
         "EIF":ExtendedIForest,
         "ODIN":ODIN,
-        "ECOD":ECOD
+        "ECOD":ECOD,
         # "gen2out":gen2Out()
+        "1-layer-AE":AE_wrapper,
+        "2-layer-AE":AE_wrapper,
+        "3-layer-AE":AE_wrapper,
+        "1-layer-VAE":VAE_wrapper,
+        "2-layer-VAE":VAE_wrapper,
+        "3-layer-VAE":VAE_wrapper,
+        "1-layer-beta-VAE":VAE_wrapper,
+        "2-layer-beta-VAE":VAE_wrapper,
+        "3-layer-beta-VAE":VAE_wrapper,
+        "2-layer-AnoGAN":AnoGAN_wrapper
         }
 
 #dict of methods and parameters
@@ -113,8 +126,18 @@ method_parameters = {
         #"SOD":{"n_neighbors":[20, 25 ,30], "ref_set":[10,14,18], "alpha":[0.7,0.8,0.9]},
         "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
         "ODIN":{"n_neighbors":range(5,31)},
-        "ECOD":{}
+        "ECOD":{},
         # "gen2out":
+        "1-layer-AE":{"n_layers":[1], "shrinkage_factor":[0.3,0.5,0.7,0.9], "verbose":[0]},
+        "2-layer-AE":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "3-layer-AE":{"n_layers":[3], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "1-layer-VAE":{"n_layers":[1], "shrinkage_factor":[0.3,0.5,0.7,0.9], "verbose":[0]},
+        "2-layer-VAE":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "3-layer-VAE":{"n_layers":[3], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "1-layer-beta-VAE":{"n_layers":[1], "shrinkage_factor":[0.3,0.5,0.7,0.9], "gamma":[10,20,50], "verbose":[0]},
+        "2-layer-beta-VAE":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "gamma":[10,20,50], "verbose":[0]},
+        "3-layer-beta-VAE":{"n_layers":[3], "shrinkage_factor":[0.3,0.5], "gamma":[10,20,50], "verbose":[0]},
+        "2-layer-AnoGAN":{"D_n_layers":[2], "D_shrinkage_factor":[0.3,0.5], "G_n_layers":[2], "G_shrinkage_factor":[0.3,0.5],  "verbose":[0], "epochs":[50]},
         }
 
 
