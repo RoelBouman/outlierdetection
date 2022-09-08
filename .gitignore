@@ -1,19 +1,9 @@
-
 formatted_data/
-
 raw_data/
+results/
+logs/
 
 
-result_dir/
-
-score_dir/
-
-csvresult_dir/
-
-old/
 *.pyc
-
-
 *.log
-
 *.tex
