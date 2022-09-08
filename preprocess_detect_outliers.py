@@ -10,6 +10,8 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.model_selection import ParameterGrid
 from evaluation_metrics import adjusted_precision_n_scores, average_precision, adjusted_average_precision
 
+import argparse
+
 pickle_dir = "formatted_data"
 base_result_dir = "results"
 result_dir = "result_dir"
@@ -34,8 +36,30 @@ score_functions = {"ROC/AUC": roc_auc_score,
                    "adjusted_average_precision": adjusted_average_precision}
 
 
-verbose = True
-#%% Define ensemble class for LOF
+#%% argument parsing for command line functionality
+# Create the parser
+arg_parser = argparse.ArgumentParser(description='Run selected methods over all datasets')
+
+# Add the arguments
+arg_parser.add_argument('--method',
+                       metavar='M',
+                       dest='method',
+                       default='all',
+                       type=str,
+                       help='The method that you would like to run')
+
+arg_parser.add_argument('--verbose',
+                       metavar='V',
+                       dest='verbose',
+                       default=1,
+                       type=int,
+                       help='The verbosity of the pipeline execution.')
+
+# Execute the parse_args() method
+parsed_args = arg_parser.parse_args()
+
+method_to_run = parsed_args.method
+verbose = parsed_args.verbose
 
 #%% Define parameter settings and methods
 
@@ -140,6 +164,14 @@ method_parameters = {
         "2-layer-AnoGAN":{"D_n_layers":[2], "D_shrinkage_factor":[0.3,0.5], "G_n_layers":[2], "G_shrinkage_factor":[0.3,0.5],  "verbose":[0], "epochs":[50]},
         }
 
+#%% 
+if method_to_run == "all":
+    all_methods_to_run = method_classes
+else:
+    try:
+        all_methods_to_run = {method_to_run:method_classes[method_to_run]}
+    except KeyError:
+        raise KeyError("Specified method is not found in the list of available methods.")
 
 #%% loop over all data, but do not reproduce existing results
 
@@ -168,7 +200,7 @@ for picklefile_name in picklefile_names:
     
     #loop over all methods:
 
-    for method_name, OD_class in method_classes.items():
+    for method_name, OD_class in all_methods_to_run.items():
         print("-" + method_name)
         hyperparameter_grid = method_parameters[method_name]
         hyperparameter_list = list(ParameterGrid(hyperparameter_grid))
