@@ -5,8 +5,11 @@ TODO:
 		-AE
 		-VAE
 		-DeepSVDD
+		-GAAL
 	- Non deep:
 		- Robust KDE
 		- SVDD (https://github.com/iqiukp/SVDD-Python)
-		- Ensemble GMM
+		- Ensemble GMM (see Emmot et al.)
+		- GMM 
+		- random cut forests
 

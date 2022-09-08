@@ -1,18 +1,22 @@
 import pickle
 import os
 import numpy as np
-import re
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from scipy.stats import friedmanchisquare
 import scipy.stats
 from scikit_posthocs import posthoc_nemenyi_friedman
-import math
 sns.set()
 
-result_dir = "result_dir"
+prune = "datasets"        
+
+result_dir = "results/result_dir"
 figure_dir = "figures"
+table_dir = "tables"
+
+os.makedirs(table_dir, exist_ok=True)
+os.makedirs(figure_dir, exist_ok=True)
 
 method_blacklist = []
 double_dataset_blacklist = ["annthyroid"] #completely cluster together with ODDS datasets
@@ -20,7 +24,6 @@ unsolvable_dataset_blacklist = ["speech", "vertebral"]#, "speech_Goldstein"]
 own_dataset_blacklist = ["letter-recognition.data"] #own datasets for global/local verification
 dataset_blacklist = unsolvable_dataset_blacklist + own_dataset_blacklist# + double_dataset_blacklist 
 
-result_files = os.listdir(result_dir)
 
 evaluation_metrics = ["ROC/AUC","R_precision", "adjusted_R_precision", "average_precision", "adjusted_average_precision"]
 #%%
@@ -49,49 +52,84 @@ def iman_davenport_critical_value(rank_df):
 #%%
 
 #First find all datasets and methods used:
-methods = []
-datasets = []
-for result_file in result_files:
-    full_path_filename = os.path.join(result_dir, result_file)
+datasets = os.listdir(result_dir)
     
-    partial_result = pickle.load(open(full_path_filename, 'rb'))
-    
-    (data_name, method_name) = re.compile("(.*)_(.*?)_.*").match(result_file).groups()
-    
-    methods.append(method_name)
-    datasets.append(data_name)
+methods_per_dataset = []
 
-methods = list(set(methods))
-datasets = list(set(datasets))
+method_count_per_dataset = {}
+max_methods = 0
+for dataset in datasets:
+    method_folders = os.listdir(os.path.join(result_dir, dataset))
+    
+    methods_per_dataset.append(set(method_folders))
+    
+    method_count_per_dataset[dataset] = len(method_folders)
+    
+    if method_count_per_dataset[dataset] > max_methods:
+        max_methods = method_count_per_dataset[dataset]
+
+
+if prune == "methods":
+    methods = set.intersection(*methods_per_dataset)
+    
+    incomplete_methods = set([x for xs in methods_per_dataset for x in xs]).difference(methods)
+    
+    if len(incomplete_methods) > 0:
+        print("The following methods were not calculated for each dataset:")
+        print(incomplete_methods)
+    
+    methods = list(methods)
+elif prune == "datasets":
+    methods = set.union(*methods_per_dataset)
+    
+    datasets = [m  for m in method_count_per_dataset if method_count_per_dataset[m] == max_methods]
+
+
+
 
 #%% Read all metrics from files
+
+#contains the averaged results
 metric_dfs = {}
+
+#contains the full results of all hyperparameters
+full_metric_dfs = {}
+
 for evaluation_metric in evaluation_metrics:
     
     metric_dfs[evaluation_metric] = pd.DataFrame(index=methods,columns=datasets)
+    full_metric_dfs[evaluation_metric] = pd.DataFrame(index=methods,columns=datasets)
 
-for result_file in result_files:
-    full_path_filename = os.path.join(result_dir, result_file)
-    
-    partial_result = pickle.load(open(full_path_filename, 'rb'))
-    
-    (data_name, method_name) = re.compile("(.*)_(.*?)_.*").match(result_file).groups()
+for dataset_name in datasets:
+    for method_name in methods:
         
-    for evaluation_metric in evaluation_metrics: 
-        try: 
-            metric_dfs[evaluation_metric][data_name][method_name] = partial_result[evaluation_metric][method_name]
-        except KeyError:
-            if method_name == "IF":
-                metric_dfs[evaluation_metric][data_name][method_name] = partial_result[evaluation_metric]["Isolation Forest"]
+            result_folder_path = os.path.join(result_dir, dataset_name, method_name)
+            
+            hyperparameter_pickles = os.listdir(result_folder_path)
+            hyperparameter_settings = [filename.replace(".pickle", "") for filename in hyperparameter_pickles]
+            
+            results_per_setting = {}
+            for hyperparameter_pickle, hyperparameter_setting in zip(hyperparameter_pickles, hyperparameter_settings):
+                
+                full_path_filename = os.path.join(result_folder_path, hyperparameter_pickle)
+                
+                results_per_setting[hyperparameter_setting] = pickle.load(open(full_path_filename, 'rb'))
+                
+            for evaluation_metric in evaluation_metrics: 
+                metric_per_setting = {setting:results[evaluation_metric].values[0] for setting, results in results_per_setting.items()}
+                
+                average_metric = np.mean(np.fromiter(metric_per_setting.values(), dtype=float))
+                metric_dfs[evaluation_metric][dataset_name][method_name] = average_metric
+                full_metric_dfs[evaluation_metric][dataset_name][method_name] = metric_per_setting
         
 #%% optional: filter either datasets or methods for which not all methods are in:
     # Also filter blacklisted items.
 
-prune = "methods"        
+
         
 for evaluation_metric in evaluation_metrics:
-    metric_dfs[evaluation_metric].drop(method_blacklist, axis=0, inplace=True)
-    metric_dfs[evaluation_metric].drop(dataset_blacklist,axis=1,inplace=True)
+    metric_dfs[evaluation_metric].drop(method_blacklist, axis=0, inplace=True, errors="ignore")
+    metric_dfs[evaluation_metric].drop(dataset_blacklist,axis=1,inplace=True, errors="ignore")
         
     if prune == "methods":
         metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..

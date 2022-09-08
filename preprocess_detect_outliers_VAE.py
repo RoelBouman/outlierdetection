@@ -15,6 +15,7 @@ base_result_dir = "results"
 result_dir = "result_dir"
 csvresult_dir = "csvresult_dir"
 score_dir = "score_dir"
+log_dir = "logs"
 
 #picklefile_names = os.listdir(pickle_dir)
 
@@ -38,82 +39,30 @@ verbose = True
 
 #%% Define parameter settings and methods
 
-from pyod.models.abod import ABOD
-from pyod.models.cblof import CBLOF
-from pyod.models.cof import COF
-from pyod.models.copod import COPOD
-from pyod.models.hbos import HBOS
-from pyod.models.iforest import IForest
-from pyod.models.knn import KNN 
-from pyod.models.lmdd import LMDD
-from pyod.models.loda import LODA
-from pyod.models.lof import LOF
-#from pyod.models.loci import LOCI #LOCI is horrendously slow. (O(n3)), aLOCI might be a decent approach, but are there implementations?
-from pyod.models.mcd import MCD
-from pyod.models.ocsvm import OCSVM
-from pyod.models.pca import PCA
-from pyod.models.sod import SOD
-from pyod.models.ecod import ECOD
-#from pyod.models.sos import SOS #SOS also has memory allocation issues.
-from pyod.models.combination import maximization
-
-from additional_methods.ensemble import  Ensemble
-from additional_methods.wrappers import ExtendedIForest
-from additional_methods.ODIN import ODIN
-from additional_methods.gen2out.gen2out import gen2Out
-
+#from pyod.models.vae import VAE
+from wrappers.VAE import VAE_wrapper
 random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
 
-ensemble_LOF_krange = range(5,31)
 
 #dict of methods and functions
 method_classes = {
-        "ABOD":ABOD, 
-        "CBLOF":CBLOF,
-        "u-CBLOF":CBLOF,
-        #"COF":COF,
-        "COPOD":COPOD,
-        "HBOS":HBOS,
-        "kNN":KNN,
-        "kth-NN":KNN,
-        "IF":IForest,
-        "LMDD":LMDD,
-        "LODA":LODA,
-        "ensemble-LOF":Ensemble,
-        "LOF":LOF,
-        "MCD":MCD,
-        "OCSVM":OCSVM,
-        "PCA":PCA, 
-        "SOD":SOD,
-        "EIF":ExtendedIForest,
-        "ODIN":ODIN,
-        "ECOD":ECOD
-        # "gen2out":gen2Out()
+        "1-layer-VAE":VAE_wrapper,
+        "2-layer-VAE":VAE_wrapper,
+        "3-layer-VAE":VAE_wrapper,
+        "1-layer-beta-VAE":VAE_wrapper,
+        "2-layer-beta-VAE":VAE_wrapper,
+        "3-layer-beta-VAE":VAE_wrapper
         }
 
 #dict of methods and parameters
+#tst beta = 1 (vae) and 10 (beta-vae as as per Zhou)
 method_parameters = {
-        "ABOD":{"method":["fast"], "n_neighbors":[60]}, 
-        "CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
-        "u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
-        "COF":{"n_neighbors":[5,10,15,20,25,30]},
-        "COPOD":{},
-        "HBOS":{"n_bins":["auto"]},
-        "kNN":{"n_neighbors":range(5,31), "method":["mean"]},
-        "kth-NN":{"n_neighbors":range(5,31), "method":["largest"]},
-        "IF":{"n_estimators":[1000], "max_samples":[128,256,512,1024]},
-        "LMDD":{"n_iter":[100],"dis_measure":["aad"]}, #aad is the same as the MAD
-        "LODA":{"n_bins":["auto"]},
-        "ensemble-LOF":{"estimators":[[LOF(n_neighbors=k) for k in ensemble_LOF_krange]], "combination_function":[maximization]},
-        "LOF":{"n_neighbors":range(5,31)},
-        "MCD":{"support_fraction":[0.6,0.7,0.8,0.9], "assume_centered":[True]},
-        "OCSVM":{"kernel":["rbf"], "gamma":["auto"], "nu":[0.5,0.6,0.7,0.8,0.9]},
-         "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
-        "SOD":{"n_neighbors":[20, 25 ,30], "ref_set":[10,14,18], "alpha":[0.7,0.8,0.9]},
-        "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
-        "ODIN":{"n_neighbors":range(5,31)},
-        "ECOD":{}
-        # "gen2out":
+        "1-layer-VAE":{"n_layers":[1], "shrinkage_factor":[0.3,0.5,0.7,0.9], "verbose":[0]},
+        "2-layer-VAE":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "3-layer-VAE":{"n_layers":[3], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "1-layer-beta-VAE":{"n_layers":[1], "shrinkage_factor":[0.3,0.5,0.7,0.9], "gamma":[10,20,50], "verbose":[0]},
+        "2-layer-beta-VAE":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "gamma":[10,20,50], "verbose":[0]},
+        "3-layer-beta-VAE":{"n_layers":[3], "shrinkage_factor":[0.3,0.5], "gamma":[10,20,50], "verbose":[0]}
         }
 
 
@@ -152,10 +101,8 @@ for picklefile_name in picklefile_names:
         #loop over hyperparameter settings
         for hyperparameter_setting in hyperparameter_list:
             
-            if method_name == "ensemble-LOF":
-                hyperparameter_string = str(ensemble_LOF_krange)
-            else:
-                hyperparameter_string = str(hyperparameter_setting)
+         
+            hyperparameter_string = str(hyperparameter_setting)
                 
             if verbose:
                 print(hyperparameter_string)
@@ -163,40 +110,20 @@ for picklefile_name in picklefile_names:
             #check whether results have  been calculated
             full_target_dir = os.path.join(target_dir, picklefile_name.replace(".pickle", ""), method_name)
             target_file_name = os.path.join(target_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".pickle")
+            
             if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
                 if verbose:
                     print(" results already calculated, skipping recalculation")
-            elif method_name == "EIF" and X.shape[1] <= hyperparameter_setting["extension_level"]:
-                print("Dimensionality of dataset higher than EIF extension level, skipping...")
             else:
-                
-                #use memory efficient COF when too many samples:
-                if method_name =="COF" and X.shape[0] > 8000:
-                    hyperparameter_setting["method"] = "memory"
                 
                 
                 OD_method = OD_class(**hyperparameter_setting)
-                
-                #Temporary fix for ECOD:
-                if method_name == "ECOD" and hasattr(OD_method, "X_train"):
-                    delattr(OD_method, "X_train")
                     
                 pipeline = make_pipeline(RobustScaler(), OD_method)
                 
-                try:
-                    pipeline.fit(X)
-                except ValueError as e: #Catch error when CBLOF fails due to configuration
-                    if str(e) == "Could not form valid cluster separation. Please change n_clusters or change clustering method":
-                        print("Separation invalid, skipping this hyperparameter setting")
-                        continue
-                    else:
-                        raise e
-                
-                #correct for non pyod-like behaviour from gen2out
-                if method_name == "gen2out":
-                    outlier_scores = pipeline[1].decision_function(pipeline.transform(X))
-                else:
-                    outlier_scores = pipeline[1].decision_scores_
+                pipeline.fit(X)
+
+                outlier_scores = pipeline[1].decision_scores_
                 
                 method_performance = {method_name:{score_name: score_function(y,outlier_scores) for (score_name, score_function) in score_functions.items()}}
                 method_performance_df = pd.DataFrame(method_performance).transpose()
@@ -215,4 +142,23 @@ for picklefile_name in picklefile_names:
                 os.makedirs(full_target_scoredir, exist_ok=True)
                 target_scorefile_name = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
                 np.savetxt(target_scorefile_name, outlier_scores)
+                
+                #write Keras history
+                
+                history = pipeline[1].history_
+                history_df = pd.DataFrame(history)
+                
+                full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
+                target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".pickle")
+                
+                os.makedirs(full_target_dir, exist_ok=True)
+                with open(target_file_name, 'wb') as handle:
+                    pickle.dump(method_performance_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                    
+                full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
+                target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".csv")
+                
+                os.makedirs(full_target_dir, exist_ok=True)
+                with open(target_file_name, 'wb') as handle:
+                    history_df.to_csv(handle)
 
