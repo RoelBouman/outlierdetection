@@ -44,7 +44,7 @@ arg_parser = argparse.ArgumentParser(description='Run selected methods over all 
 arg_parser.add_argument('--method',
                        metavar='M',
                        dest='method',
-                       default='all',
+                       default='DeepSVDD',
                        type=str,
                        help='The method that you would like to run')
 
@@ -90,7 +90,7 @@ from additional_methods.gen2out.gen2out import gen2Out
 from additional_methods.wrappers.AE import AE_wrapper
 from additional_methods.wrappers.VAE import VAE_wrapper
 from additional_methods.wrappers.AnoGAN import AnoGAN_wrapper
-
+from additional_methods.wrappers.DeepSVDD import DeepSVDD_wrapper
 
 ensemble_LOF_krange = range(5,31)
 
@@ -126,7 +126,9 @@ method_classes = {
         "1-layer-beta-VAE":VAE_wrapper,
         "2-layer-beta-VAE":VAE_wrapper,
         "3-layer-beta-VAE":VAE_wrapper,
-        "2-layer-AnoGAN":AnoGAN_wrapper
+        "2-layer-AnoGAN":AnoGAN_wrapper,
+        "DeepSVDD":DeepSVDD_wrapper,
+        "AE-DeepSVDD":DeepSVDD_wrapper
         }
 
 #dict of methods and parameters
@@ -162,6 +164,8 @@ method_parameters = {
         "2-layer-beta-VAE":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "gamma":[10,20,50], "verbose":[0]},
         "3-layer-beta-VAE":{"n_layers":[3], "shrinkage_factor":[0.3,0.5], "gamma":[10,20,50], "verbose":[0]},
         "2-layer-AnoGAN":{"D_n_layers":[2], "D_shrinkage_factor":[0.3,0.5], "G_n_layers":[2], "G_shrinkage_factor":[0.3,0.5],  "verbose":[0], "epochs":[50]},
+        "DeepSVDD":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "AE-DeepSVDD":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0], "use_ae":[True]}
         }
 
 #%% 
@@ -273,7 +277,7 @@ for picklefile_name in picklefile_names:
                 np.savetxt(target_scorefile_name, outlier_scores)
                 
                 #write Keras history
-                if method_name in ["VAE", "beta-VAE", "AE", "AnoGAN"]:
+                if method_name in ["VAE", "beta-VAE", "AE", "AnoGAN", "DeepSVDD"]:
                     if method_name == "AnoGAN":
                         history_df = pd.DataFrame({"discriminator_loss":pipeline[1].hist_loss_discriminator, "generator_loss":pipeline[1].hist_loss_generator})
                     else:
