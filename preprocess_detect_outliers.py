@@ -291,7 +291,7 @@ for picklefile_name in picklefile_names:
                     
                     os.makedirs(full_target_dir, exist_ok=True)
                     with open(target_file_name, 'wb') as handle:
-                        pickle.dump(method_performance_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                        pickle.dump(history_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
                         
                     full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
                     target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".csv")
