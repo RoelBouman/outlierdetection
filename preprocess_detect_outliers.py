@@ -10,11 +10,14 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.model_selection import ParameterGrid
 from evaluation_metrics import adjusted_precision_n_scores, average_precision, adjusted_average_precision
 
+import argparse
+
 pickle_dir = "formatted_data"
 base_result_dir = "results"
 result_dir = "result_dir"
 csvresult_dir = "csvresult_dir"
 score_dir = "score_dir"
+log_dir = "logs"
 
 #picklefile_names = os.listdir(pickle_dir)
 
@@ -33,8 +36,30 @@ score_functions = {"ROC/AUC": roc_auc_score,
                    "adjusted_average_precision": adjusted_average_precision}
 
 
-verbose = True
-#%% Define ensemble class for LOF
+#%% argument parsing for command line functionality
+# Create the parser
+arg_parser = argparse.ArgumentParser(description='Run selected methods over all datasets')
+
+# Add the arguments
+arg_parser.add_argument('--method',
+                       metavar='M',
+                       dest='method',
+                       default='all',
+                       type=str,
+                       help='The method that you would like to run')
+
+arg_parser.add_argument('--verbose',
+                       metavar='V',
+                       dest='verbose',
+                       default=1,
+                       type=int,
+                       help='The verbosity of the pipeline execution.')
+
+# Execute the parse_args() method
+parsed_args = arg_parser.parse_args()
+
+method_to_run = parsed_args.method
+verbose = parsed_args.verbose
 
 #%% Define parameter settings and methods
 
@@ -58,11 +83,14 @@ from pyod.models.ecod import ECOD
 from pyod.models.combination import maximization
 
 from additional_methods.ensemble import  Ensemble
-from additional_methods.wrappers import ExtendedIForest
+from additional_methods.wrappers.ExtendedIForest import ExtendedIForest
 from additional_methods.ODIN import ODIN
 from additional_methods.gen2out.gen2out import gen2Out
 
-random_state = 1457969831 #generated using np.random.randint(0, 2**31 -1)
+from additional_methods.wrappers.AE import AE_wrapper
+from additional_methods.wrappers.VAE import VAE_wrapper
+from additional_methods.wrappers.AnoGAN import AnoGAN_wrapper
+from additional_methods.wrappers.DeepSVDD import DeepSVDD_wrapper
 
 ensemble_LOF_krange = range(5,31)
 
@@ -84,11 +112,23 @@ method_classes = {
         "MCD":MCD,
         "OCSVM":OCSVM,
         "PCA":PCA, 
-        "SOD":SOD,
+        #"SOD":SOD,
         "EIF":ExtendedIForest,
         "ODIN":ODIN,
-        "ECOD":ECOD
+        "ECOD":ECOD,
         # "gen2out":gen2Out()
+        "1-layer-AE":AE_wrapper,
+        "2-layer-AE":AE_wrapper,
+        "3-layer-AE":AE_wrapper,
+        "1-layer-VAE":VAE_wrapper,
+        "2-layer-VAE":VAE_wrapper,
+        "3-layer-VAE":VAE_wrapper,
+        "1-layer-beta-VAE":VAE_wrapper,
+        "2-layer-beta-VAE":VAE_wrapper,
+        "3-layer-beta-VAE":VAE_wrapper,
+        #"2-layer-AnoGAN":AnoGAN_wrapper,
+        "DeepSVDD":DeepSVDD_wrapper,
+        "AE-DeepSVDD":DeepSVDD_wrapper
         }
 
 #dict of methods and parameters
@@ -96,7 +136,7 @@ method_parameters = {
         "ABOD":{"method":["fast"], "n_neighbors":[60]}, 
         "CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
         "u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
-        "COF":{"n_neighbors":[5,10,15,20,25,30]},
+        #"COF":{"n_neighbors":[5,10,15,20,25,30]},
         "COPOD":{},
         "HBOS":{"n_bins":["auto"]},
         "kNN":{"n_neighbors":range(5,31), "method":["mean"]},
@@ -112,10 +152,30 @@ method_parameters = {
         "SOD":{"n_neighbors":[20, 25 ,30], "ref_set":[10,14,18], "alpha":[0.7,0.8,0.9]},
         "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
         "ODIN":{"n_neighbors":range(5,31)},
-        "ECOD":{}
+        "ECOD":{},
         # "gen2out":
+        "1-layer-AE":{"n_layers":[1], "shrinkage_factor":[0.3,0.5,0.7,0.9], "verbose":[0]},
+        "2-layer-AE":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "3-layer-AE":{"n_layers":[3], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "1-layer-VAE":{"n_layers":[1], "shrinkage_factor":[0.3,0.5,0.7,0.9], "verbose":[0]},
+        "2-layer-VAE":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "3-layer-VAE":{"n_layers":[3], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "1-layer-beta-VAE":{"n_layers":[1], "shrinkage_factor":[0.3,0.5,0.7,0.9], "gamma":[10,20,50], "verbose":[0]},
+        "2-layer-beta-VAE":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "gamma":[10,20,50], "verbose":[0]},
+        "3-layer-beta-VAE":{"n_layers":[3], "shrinkage_factor":[0.3,0.5], "gamma":[10,20,50], "verbose":[0]},
+        "2-layer-AnoGAN":{"D_n_layers":[2], "D_shrinkage_factor":[0.3,0.5], "G_n_layers":[2], "G_shrinkage_factor":[0.3,0.5],  "verbose":[0], "epochs":[50]},
+        "DeepSVDD":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        "AE-DeepSVDD":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0], "use_ae":[True]}
         }
 
+#%% 
+if method_to_run == "all":
+    all_methods_to_run = method_classes
+else:
+    try:
+        all_methods_to_run = {method_to_run:method_classes[method_to_run]}
+    except KeyError:
+        raise KeyError("Specified method is not found in the list of available methods.")
 
 #%% loop over all data, but do not reproduce existing results
 
@@ -144,7 +204,7 @@ for picklefile_name in picklefile_names:
     
     #loop over all methods:
 
-    for method_name, OD_class in method_classes.items():
+    for method_name, OD_class in all_methods_to_run.items():
         print("-" + method_name)
         hyperparameter_grid = method_parameters[method_name]
         hyperparameter_list = list(ParameterGrid(hyperparameter_grid))
@@ -215,4 +275,28 @@ for picklefile_name in picklefile_names:
                 os.makedirs(full_target_scoredir, exist_ok=True)
                 target_scorefile_name = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
                 np.savetxt(target_scorefile_name, outlier_scores)
+                
+                #write Keras history
+                if method_name in ["VAE", "beta-VAE", "AE", "AnoGAN", "DeepSVDD"]:
+                    if method_name == "AnoGAN":
+                        history_df = pd.DataFrame({"discriminator_loss":pipeline[1].hist_loss_discriminator, "generator_loss":pipeline[1].hist_loss_generator})
+                    else:
+                        history = pipeline[1].history_
+                        history_df = pd.DataFrame(history)
+
+
+                    
+                    full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
+                    target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".pickle")
+                    
+                    os.makedirs(full_target_dir, exist_ok=True)
+                    with open(target_file_name, 'wb') as handle:
+                        pickle.dump(history_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                        
+                    full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
+                    target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".csv")
+                    
+                    os.makedirs(full_target_dir, exist_ok=True)
+                    with open(target_file_name, 'wb') as handle:
+                        history_df.to_csv(handle)
 

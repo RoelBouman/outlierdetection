@@ -1,15 +1,30 @@
 TODO:
-- Add datasets from Emmot et al.: https://ir.library.oregonstate.edu/concern/datasets/47429f155?locale=en
+- Add datasets from :
+	- Emmot et al.: https://ir.library.oregonstate.edu/concern/datasets/47429f155?locale=en
+	- The Robust Multi-Scale Deep-SVDD Model for Anomaly
+Online Detection of Rolling Bearings
+	- An Ensembled Anomaly Detector for Wafer Fault Detection
+
 - Add additional methods:
-	- Deep methods:
-		-AE
-		-VAE
-		-DeepSVDD
-		-GAAL
+	- Deep methods: (in PyOD)
+		X AE
+		X VAE
+		X beta-VAE 
+		- DeepSVDD
+		- SO-GAAL
+		- MO-GAAL
+		- AnoGAN
+		- LUNAR
 	- Non deep:
 		- Robust KDE
 		- SVDD (https://github.com/iqiukp/SVDD-Python)
 		- Ensemble GMM (see Emmot et al.)
-		- GMM 
 		- random cut forests
+		- PyOD:
+			- GMM			
+			- Cook's Distance
+			- i-nne
+			- KDE
+			- MAD
+			- R-graph
 
