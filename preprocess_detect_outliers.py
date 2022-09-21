@@ -44,7 +44,7 @@ arg_parser = argparse.ArgumentParser(description='Run selected methods over all 
 arg_parser.add_argument('--method',
                        metavar='M',
                        dest='method',
-                       default='DeepSVDD',
+                       default='all',
                        type=str,
                        help='The method that you would like to run')
 
@@ -126,7 +126,7 @@ method_classes = {
         "1-layer-beta-VAE":VAE_wrapper,
         "2-layer-beta-VAE":VAE_wrapper,
         "3-layer-beta-VAE":VAE_wrapper,
-        "2-layer-AnoGAN":AnoGAN_wrapper,
+        #"2-layer-AnoGAN":AnoGAN_wrapper,
         "DeepSVDD":DeepSVDD_wrapper,
         "AE-DeepSVDD":DeepSVDD_wrapper
         }
@@ -149,7 +149,7 @@ method_parameters = {
         "MCD":{"support_fraction":[0.6,0.7,0.8,0.9], "assume_centered":[True]},
         "OCSVM":{"kernel":["rbf"], "gamma":["auto"], "nu":[0.5,0.6,0.7,0.8,0.9]},
          "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
-        #"SOD":{"n_neighbors":[20, 25 ,30], "ref_set":[10,14,18], "alpha":[0.7,0.8,0.9]},
+        "SOD":{"n_neighbors":[20, 25 ,30], "ref_set":[10,14,18], "alpha":[0.7,0.8,0.9]},
         "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
         "ODIN":{"n_neighbors":range(5,31)},
         "ECOD":{},

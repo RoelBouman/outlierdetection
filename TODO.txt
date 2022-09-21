@@ -1,5 +1,10 @@
 TODO:
-- Add datasets from Emmot et al.: https://ir.library.oregonstate.edu/concern/datasets/47429f155?locale=en
+- Add datasets from :
+	- Emmot et al.: https://ir.library.oregonstate.edu/concern/datasets/47429f155?locale=en
+	- The Robust Multi-Scale Deep-SVDD Model for Anomaly
+Online Detection of Rolling Bearings
+	- An Ensembled Anomaly Detector for Wafer Fault Detection
+
 - Add additional methods:
 	- Deep methods: (in PyOD)
 		X AE
