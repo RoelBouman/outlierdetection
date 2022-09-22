@@ -44,7 +44,7 @@ arg_parser = argparse.ArgumentParser(description='Run selected methods over all 
 arg_parser.add_argument('--method',
                        metavar='M',
                        dest='method',
-                       default='all',
+                       default='KDE',
                        type=str,
                        help='The method that you would like to run')
 
@@ -62,6 +62,8 @@ method_to_run = parsed_args.method
 verbose = parsed_args.verbose
 
 #%% Define parameter settings and methods
+
+from pyod.models.kde import KDE
 
 from pyod.models.abod import ABOD
 from pyod.models.cblof import CBLOF
@@ -96,6 +98,7 @@ ensemble_LOF_krange = range(5,31)
 
 #dict of methods and functions
 method_classes = {
+        "KDE":KDE,
         "ABOD":ABOD, 
         "CBLOF":CBLOF,
         "u-CBLOF":CBLOF,
@@ -127,12 +130,13 @@ method_classes = {
         "2-layer-beta-VAE":VAE_wrapper,
         "3-layer-beta-VAE":VAE_wrapper,
         #"2-layer-AnoGAN":AnoGAN_wrapper,
-        "DeepSVDD":DeepSVDD_wrapper,
-        "AE-DeepSVDD":DeepSVDD_wrapper
+        #"DeepSVDD":DeepSVDD_wrapper,
+        #"AE-DeepSVDD":DeepSVDD_wrapper
         }
 
 #dict of methods and parameters
 method_parameters = {
+         "KDE":{},
         "ABOD":{"method":["fast"], "n_neighbors":[60]}, 
         "CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
         "u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
@@ -164,8 +168,8 @@ method_parameters = {
         "2-layer-beta-VAE":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "gamma":[10,20,50], "verbose":[0]},
         "3-layer-beta-VAE":{"n_layers":[3], "shrinkage_factor":[0.3,0.5], "gamma":[10,20,50], "verbose":[0]},
         "2-layer-AnoGAN":{"D_n_layers":[2], "D_shrinkage_factor":[0.3,0.5], "G_n_layers":[2], "G_shrinkage_factor":[0.3,0.5],  "verbose":[0], "epochs":[50]},
-        "DeepSVDD":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
-        "AE-DeepSVDD":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0], "use_ae":[True]}
+        #"DeepSVDD":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0]},
+        #"AE-DeepSVDD":{"n_layers":[2], "shrinkage_factor":[0.3,0.5], "verbose":[0], "use_ae":[True]}
         }
 
 #%% 

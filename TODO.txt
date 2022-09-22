@@ -22,7 +22,6 @@ Online Detection of Rolling Bearings
 		- random cut forests
 		- PyOD:
 			- GMM			
-			- Cook's Distance
 			- i-nne
 			- KDE
 			- MAD
