@@ -13,17 +13,17 @@ Online Detection of Rolling Bearings
 		- DeepSVDD
 		- SO-GAAL
 		- MO-GAAL
-		- AnoGAN
+		X AnoGAN
 		- LUNAR
+	- DeepSVDD from LukasRUFF
 	- Non deep:
 		- Robust KDE
 		- SVDD (https://github.com/iqiukp/SVDD-Python)
 		- Ensemble GMM (see Emmot et al.)
 		- random cut forests
-		- PyOD:
-			- GMM			
-			- i-nne
-			- KDE
-			- MAD
-			- R-graph
+		X PyOD:
+			X GMM			
+			X i-nne
+			X KDE
+			X R-graph
 

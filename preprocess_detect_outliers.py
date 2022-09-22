@@ -44,7 +44,7 @@ arg_parser = argparse.ArgumentParser(description='Run selected methods over all 
 arg_parser.add_argument('--method',
                        metavar='M',
                        dest='method',
-                       default='KDE',
+                       default='RGraph',
                        type=str,
                        help='The method that you would like to run')
 
@@ -63,7 +63,10 @@ verbose = parsed_args.verbose
 
 #%% Define parameter settings and methods
 
+from pyod.models.rgraph import RGraph
+from pyod.models.inne import INNE
 from pyod.models.kde import KDE
+from pyod.models.gmm import GMM
 
 from pyod.models.abod import ABOD
 from pyod.models.cblof import CBLOF
@@ -98,6 +101,9 @@ ensemble_LOF_krange = range(5,31)
 
 #dict of methods and functions
 method_classes = {
+        "RGraph":RGraph,
+        "INNE":INNE,
+        "GMM":GMM,
         "KDE":KDE,
         "ABOD":ABOD, 
         "CBLOF":CBLOF,
@@ -136,7 +142,10 @@ method_classes = {
 
 #dict of methods and parameters
 method_parameters = {
-         "KDE":{},
+        "RGraph":{"gamma":[5,50,200,350,500]},
+        "INNE":{},
+        "GMM":{"n_components":range(2,15)},
+        "KDE":{},
         "ABOD":{"method":["fast"], "n_neighbors":[60]}, 
         "CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
         "u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
