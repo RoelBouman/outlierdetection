@@ -58,10 +58,9 @@ class auto_encoder(BaseNet):
         
         for i in range(n_layers):
             self.layers.append(nn.Linear(reverse_layer_sizes[i], reverse_layer_sizes[i+1], bias=False))
-            if i is not n_layers-1:
-                nn.init.xavier_uniform_(self.layers[-1].weight, gain=nn.init.calculate_gain('leaky_relu'))
-                self.layers.append(nn.BatchNorm1d(reverse_layer_sizes[i+1], eps=1e-04, affine=False))
-                self.layers.append(nn.LeakyReLU())
+            nn.init.xavier_uniform_(self.layers[-1].weight, gain=nn.init.calculate_gain('leaky_relu'))
+            self.layers.append(nn.BatchNorm1d(reverse_layer_sizes[i+1], eps=1e-04, affine=False))
+            self.layers.append(nn.LeakyReLU())
         
         self.layers.append(nn.Sigmoid())
         self.decoder = nn.Sequential(*self.layers)
