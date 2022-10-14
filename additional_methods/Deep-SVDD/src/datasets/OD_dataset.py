@@ -18,8 +18,6 @@ class OD_Dataset(TorchvisionDataset):
         self.outlier_classes = [0,1]
         self.outlier_classes.remove(normal_class)
 
-
-
         # Subset train set to normal class
         self.train_set = OD_Base_Dataset(dataset_name=root)
 
@@ -29,7 +27,7 @@ class OD_Base_Dataset(Dataset):
     def __init__(self, dataset_name):
         
         data = pickle.load(open(dataset_name, 'rb'))
-        self.X, self.y = data["X"], np.squeeze(data["y"])
+        self.X, self.y = data["X"].astype(np.float32), np.squeeze(data["y"]).astype(np.float32)
         
         scaler = RobustScaler()
         

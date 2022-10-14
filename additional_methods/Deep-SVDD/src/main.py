@@ -15,7 +15,9 @@ from datasets.main import load_dataset
 ################################################################################
 @click.command()
 @click.argument('dataset_name', type=str)
-@click.argument('net_name', type=click.Choice(['mnist_LeNet', 'cifar10_LeNet', 'cifar10_LeNet_ELU']))
+#@click.argument('net_name', type=click.Choice(['mnist_LeNet', 'cifar10_LeNet', 'cifar10_LeNet_ELU']))
+@click.argument('n_layers', type=int)
+@click.argument('shrinkage_factor', type=float)
 @click.argument('xp_path', type=click.Path(exists=True))
 @click.argument('data_path', type=click.Path(exists=True))
 @click.option('--load_config', type=click.Path(exists=True), default=None,
@@ -53,14 +55,15 @@ from datasets.main import load_dataset
               help='Number of workers for data loading. 0 means that the data will be loaded in the main process.')
 @click.option('--normal_class', type=int, default=0,
               help='Specify the normal class of the dataset (all other classes are considered anomalous).')
-def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, objective, nu, device, seed,
+def main(dataset_name, n_layers, shrinkage_factor, xp_path, data_path, load_config, load_model, objective, nu, device, seed,
          optimizer_name, lr, n_epochs, lr_milestone, batch_size, weight_decay, pretrain, ae_optimizer_name, ae_lr,
          ae_n_epochs, ae_lr_milestone, ae_batch_size, ae_weight_decay, n_jobs_dataloader, normal_class):
     """
     Deep SVDD, a fully deep method for anomaly detection.
 
     :arg DATASET_NAME: Name of the dataset to load.
-    :arg NET_NAME: Name of the neural network to use.
+    :arg N_LAYERS: Number of hidden layers used for network. If auto-encoder pretraining is used, the auto-encoder will have n_layers*2-1 hidden layers.
+    :arg SHRINKAGE_FACTOR: Factor by which the neurons per layer will decay between each size. Must be between 0 and 1. Shrinkage is reversed for the auto-encoder after the bottleneck layer
     :arg XP_PATH: Export path for logging the experiment.
     :arg DATA_PATH: Root path of data.
     """
@@ -86,7 +89,7 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
 
     logger.info('Dataset: %s' % dataset_name)
     logger.info('Normal class: %d' % normal_class)
-    logger.info('Network: %s' % net_name)
+    logger.info('Network (n_layers, shrinkage_factor): %s, %s' % (n_layers, shrinkage_factor))
 
     # If specified, load experiment config from JSON-file
     if load_config:
@@ -95,7 +98,7 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
 
     # Print configuration
     logger.info('Deep SVDD objective: %s' % cfg.settings['objective'])
-    logger.info('Nu-paramerter: %.2f' % cfg.settings['nu'])
+    logger.info('Nu-parameter: %.2f' % cfg.settings['nu'])
 
     # Set seed
     if cfg.settings['seed'] != -1:
@@ -112,10 +115,11 @@ def main(dataset_name, net_name, xp_path, data_path, load_config, load_model, ob
 
     # Load data
     dataset = load_dataset(dataset_name, data_path, normal_class)
-
+    n_vars = dataset.train_set.X.shape[1]
+    
     # Initialize DeepSVDD model and set neural network \phi
-    deep_SVDD = DeepSVDD(cfg.settings['objective'], cfg.settings['nu'])
-    deep_SVDD.set_network(net_name)
+    deep_SVDD = DeepSVDD(n_vars, cfg.settings['objective'], cfg.settings['nu'])
+    deep_SVDD.set_networks(cfg.settings['pretrain'], n_layers, shrinkage_factor)
     # If specified, load Deep SVDD model (radius R, center c, network weights, and possibly autoencoder weights)
     if load_model:
         deep_SVDD.load_model(model_path=load_model, load_ae=True)

@@ -2,7 +2,7 @@ import json
 import torch
 
 from base.base_dataset import BaseADDataset
-from networks.main import build_network, build_autoencoder
+from networks.networks import network, auto_encoder
 from optim.deepSVDD_trainer import DeepSVDDTrainer
 from optim.ae_trainer import AETrainer
 
@@ -25,9 +25,12 @@ class DeepSVDD(object):
         results: A dictionary to save the results.
     """
 
-    def __init__(self, objective: str = 'one-class', nu: float = 0.1):
+    def __init__(self, n_vars, objective: str = 'one-class', nu: float = 0.1):
         """Inits DeepSVDD with one of the two objectives and hyperparameter nu."""
-
+        
+        
+        self.n_vars = n_vars
+        
         assert objective in ('one-class', 'soft-boundary'), "Objective must be either 'one-class' or 'soft-boundary'."
         self.objective = objective
         assert (0 < nu) & (nu <= 1), "For hyperparameter nu, it must hold: 0 < nu <= 1."
@@ -52,10 +55,24 @@ class DeepSVDD(object):
             'test_scores': None,
         }
 
-    def set_network(self, net_name):
+    def set_networks(self, pretrain, n_layers, shrinkage_factor):
         """Builds the neural network \phi."""
-        self.net_name = net_name
-        self.net = build_network(net_name)
+        self.net, self.ae_net = self.build_networks(pretrain, n_layers, shrinkage_factor)
+        
+    def build_networks(self, pretrain, n_layers, shrinkage_factor):
+        """Builds the neural networks."""
+        
+        net = network(self.n_vars, n_layers, shrinkage_factor)
+
+        if pretrain:
+            ae_net = auto_encoder(self.n_vars, n_layers, shrinkage_factor)
+            
+        else:
+            ae_net = None
+
+        return net, ae_net
+
+        
 
     def train(self, dataset: BaseADDataset, optimizer_name: str = 'adam', lr: float = 0.001, n_epochs: int = 50,
               lr_milestones: tuple = (), batch_size: int = 128, weight_decay: float = 1e-6, device: str = 'cuda',
@@ -90,7 +107,6 @@ class DeepSVDD(object):
                  n_jobs_dataloader: int = 0):
         """Pretrains the weights for the Deep SVDD network \phi via autoencoder."""
 
-        self.ae_net = build_autoencoder(self.net_name)
         self.ae_optimizer_name = optimizer_name
         self.ae_trainer = AETrainer(optimizer_name, lr=lr, n_epochs=n_epochs, lr_milestones=lr_milestones,
                                     batch_size=batch_size, weight_decay=weight_decay, device=device,
