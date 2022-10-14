@@ -62,7 +62,7 @@ class auto_encoder(BaseNet):
             self.layers.append(nn.BatchNorm1d(reverse_layer_sizes[i+1], eps=1e-04, affine=False))
             self.layers.append(nn.LeakyReLU())
         
-        self.layers.append(nn.Sigmoid())
+        self.layers.append(nn.Linear(n_vars, n_vars))
         self.decoder = nn.Sequential(*self.layers)
 
     def forward(self, x):
