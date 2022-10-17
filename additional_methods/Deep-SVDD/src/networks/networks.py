@@ -13,7 +13,7 @@ class network(BaseNet):
         super().__init__()
         
         layer_sizes = [math.ceil(n_vars * (1-shrinkage_factor)**(i)) for i in range(n_layers+1)]
-        self.rep_dim = layer_sizes[-1]
+        self.rep_dim = math.ceil(layer_sizes[-1] * (1-shrinkage_factor))
         
         self.layers = []
         
@@ -22,6 +22,8 @@ class network(BaseNet):
             if i is not n_layers-1:
                 self.layers.append(nn.BatchNorm1d(layer_sizes[i+1], eps=1e-04, affine=False))
                 self.layers.append(nn.LeakyReLU())
+        
+        self.layers.append(nn.Linear(layer_sizes[-1], self.rep_dim, bias=False))
         
         self.encoder = nn.Sequential(*self.layers)
 
@@ -36,7 +38,7 @@ class auto_encoder(BaseNet):
         super().__init__()
         
         layer_sizes = [math.ceil(n_vars * (1-shrinkage_factor)**(i)) for i in range(n_layers+1)]
-        self.rep_dim = layer_sizes[-1]
+        self.rep_dim = math.ceil(layer_sizes[-1] * (1-shrinkage_factor))
         
         #encoder
         self.layers = []
@@ -49,11 +51,13 @@ class auto_encoder(BaseNet):
                 self.layers.append(nn.BatchNorm1d(layer_sizes[i+1], eps=1e-04, affine=False))
                 self.layers.append(nn.LeakyReLU())
         
+        self.layers.append(nn.Linear(layer_sizes[-1], self.rep_dim, bias=False))
+        
         self.encoder = nn.Sequential(*self.layers)
         
         #decoder
         
-        reverse_layer_sizes = list(reversed(layer_sizes))
+        reverse_layer_sizes = [self.rep_dim] + list(reversed(layer_sizes))
         self.layers = []
         
         for i in range(n_layers):
@@ -62,7 +66,8 @@ class auto_encoder(BaseNet):
             self.layers.append(nn.BatchNorm1d(reverse_layer_sizes[i+1], eps=1e-04, affine=False))
             self.layers.append(nn.LeakyReLU())
         
-        self.layers.append(nn.Linear(n_vars, n_vars))
+        self.layers.append(nn.Linear(reverse_layer_sizes[-1], n_vars, bias=False))
+        
         self.decoder = nn.Sequential(*self.layers)
 
     def forward(self, x):
