@@ -23,6 +23,7 @@ class network(BaseNet):
                 self.layers.append(nn.BatchNorm1d(layer_sizes[i+1], eps=1e-04, affine=False))
                 self.layers.append(nn.LeakyReLU())
         
+        #bottleneck layer
         self.layers.append(nn.Linear(layer_sizes[-1], self.rep_dim, bias=False))
         
         self.encoder = nn.Sequential(*self.layers)
@@ -51,6 +52,7 @@ class auto_encoder(BaseNet):
                 self.layers.append(nn.BatchNorm1d(layer_sizes[i+1], eps=1e-04, affine=False))
                 self.layers.append(nn.LeakyReLU())
         
+        #bottleneck layer
         self.layers.append(nn.Linear(layer_sizes[-1], self.rep_dim, bias=False))
         
         self.encoder = nn.Sequential(*self.layers)
@@ -60,13 +62,16 @@ class auto_encoder(BaseNet):
         reverse_layer_sizes = [self.rep_dim] + list(reversed(layer_sizes))
         self.layers = []
         
-        for i in range(n_layers):
+        for i in range(n_layers+1):
             self.layers.append(nn.Linear(reverse_layer_sizes[i], reverse_layer_sizes[i+1], bias=False))
-            nn.init.xavier_uniform_(self.layers[-1].weight, gain=nn.init.calculate_gain('leaky_relu'))
-            self.layers.append(nn.BatchNorm1d(reverse_layer_sizes[i+1], eps=1e-04, affine=False))
-            self.layers.append(nn.LeakyReLU())
+            if i < n_layers:
+                nn.init.xavier_uniform_(self.layers[-1].weight, gain=nn.init.calculate_gain('leaky_relu'))
+                self.layers.append(nn.BatchNorm1d(reverse_layer_sizes[i+1], eps=1e-04, affine=False))
+                self.layers.append(nn.LeakyReLU())
         
-        self.layers.append(nn.Linear(reverse_layer_sizes[-1], n_vars, bias=False))
+
+        
+        #self.layers.append(nn.Linear(reverse_layer_sizes[-1], n_vars, bias=False))
         
         self.decoder = nn.Sequential(*self.layers)
 
