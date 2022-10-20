@@ -56,7 +56,7 @@ class DeepSVDDTrainer(BaseTrainer):
         if self.c is None:
             logger.info('Initializing center c...')
             self.c = self.init_center_c(train_loader, net)
-            logger.info('Center c initialized.')
+            logger.info('Center c initialized at %s', self.c)
 
         # Training
         logger.info('Starting training...')
