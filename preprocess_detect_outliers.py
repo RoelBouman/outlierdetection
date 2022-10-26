@@ -1,6 +1,8 @@
 #%% setup
 import pickle
 import os
+import gc
+from tensorflow.keras import backend as K
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
@@ -246,6 +248,11 @@ for picklefile_name in picklefile_names:
                         continue
                     else:
                         raise e
+                #resolve 
+                if method_name in ["AE", "VAE", "beta-VAE"]:
+                    
+                    gc.collect() 
+                    K.clear_session() 
                 
                 #correct for non pyod-like behaviour from gen2out
                 if method_name == "gen2out":
