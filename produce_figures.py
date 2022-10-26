@@ -9,7 +9,7 @@ import scipy.stats
 from scikit_posthocs import posthoc_nemenyi_friedman
 sns.set()
 
-prune = "datasets"        
+prune = "methods"        
 
 result_dir = "results/result_dir"
 figure_dir = "figures"
@@ -237,6 +237,7 @@ ax.set_title("Percentage of maximum performance (ROC/AUC)")
 plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot_all_datasets.eps",format="eps")
+plt.savefig("figures/ROCAUC_boxplot_all_datasets.png",format="png")
 plt.show()
 
 
@@ -249,6 +250,7 @@ plot_df = metric_dfs["ROC/AUC"].astype(float)
 clustermap = sns.clustermap(plot_df.transpose().iloc[:,:], method="average",metric="correlation", figsize=(15,15))
 
 clustermap.savefig("figures/clustermap_all_datasets.eps",format="eps")
+clustermap.savefig("figures/clustermap_all_datasets.png",format="png")
 plt.show()
 
 #%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10
@@ -370,6 +372,7 @@ ax.set_title("Percentage of maximum performance (ROC/AUC)")
 plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot_local_datasets.eps",format="eps")
+plt.savefig("figures/ROCAUC_boxplot_local_datasets.png",format="png")
 plt.show()
 
 #%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10
@@ -491,6 +494,7 @@ ax.set_title("Percentage of maximum performance (ROC/AUC)")
 plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot_global_datasets.eps",format="eps")
+plt.savefig("figures/ROCAUC_boxplot_global_datasets.png",format="png")
 plt.show()
 
 #%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10
