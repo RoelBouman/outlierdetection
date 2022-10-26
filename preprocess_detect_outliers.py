@@ -299,6 +299,6 @@ for picklefile_name in picklefile_names:
                     target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".csv")
                     
                     os.makedirs(full_target_dir, exist_ok=True)
-                    with open(target_file_name, 'wb') as handle:
-                        history_df.to_csv(handle)
+
+                    history_df.to_csv(target_file_name)
 
