@@ -20,6 +20,8 @@ result_dir = "result_dir"
 csvresult_dir = "csvresult_dir"
 score_dir = "score_dir"
 log_dir = "logs"
+preprocessed_data_dir = "preprocessed_data"
+DeepSVDD_dir = "additional_methods/Deep-SVDD"
 
 #picklefile_names = os.listdir(pickle_dir)
 
@@ -231,6 +233,28 @@ for picklefile_name in picklefile_names:
                 if method_name =="COF" and X.shape[0] > 8000:
                     hyperparameter_setting["method"] = "memory"
                 
+                #process DeepSVDD differently due to lacking sklearn interface
+                #instead: call deepsvdd script from command line with arguments parsed from variables
+                if method_name == "DeepSVDD":
+                    
+                    preprocessed_data_file_name = os.path.join(DeepSVDD_dir, picklefile_name)
+                    #preprocess data and write to csv:
+                    
+                    #check if preprocessed data already exists:, if not preprocess and write data
+                    if not os.path.exists(preprocessed_data_file_name):
+                        scaler = RobustScaler()
+                        
+                        X_preprocessed = scaler.fit(X)
+                        
+                        data_dict = {"X": X_preprocessed, "y": y}
+                        
+                        pickle.dump(data_dict, open(preprocessed_data_file_name, "wb"))    
+                    
+                    #make shell call to calculate DeepSVDD
+                    s
+                    
+                    continue #skip rest of loop
+                
                 
                 OD_method = OD_class(**hyperparameter_setting)
                 
@@ -278,7 +302,7 @@ for picklefile_name in picklefile_names:
                 target_scorefile_name = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
                 np.savetxt(target_scorefile_name, outlier_scores)
                 
-                #write Keras history
+                #write Keras history for relevant neural methods
                 if method_name in ["VAE", "beta-VAE", "AE", "AnoGAN"]:
                     if method_name == "AnoGAN":
                         history_df = pd.DataFrame({"discriminator_loss":pipeline[1].hist_loss_discriminator, "generator_loss":pipeline[1].hist_loss_generator})
