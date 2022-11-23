@@ -67,11 +67,10 @@ verbose = parsed_args.verbose
 
 #%% Define parameter settings and methods
 
-from pyod.models.rgraph import RGraph
+#from pyod.models.rgraph import RGraph
 from pyod.models.inne import INNE
 from pyod.models.kde import KDE
 from pyod.models.gmm import GMM
-
 from pyod.models.abod import ABOD
 from pyod.models.cblof import CBLOF
 from pyod.models.cof import COF
@@ -86,6 +85,7 @@ from pyod.models.lof import LOF
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
+from pyod.models.sod import SOD
 from pyod.models.ecod import ECOD
 #from pyod.models.sos import SOS #SOS also has memory allocation issues.
 from pyod.models.combination import maximization
@@ -97,13 +97,14 @@ from additional_methods.ODIN import ODIN
 
 from additional_methods.wrappers.AE import AE_wrapper
 from additional_methods.wrappers.VAE import VAE_wrapper
-from additional_methods.wrappers.AnoGAN import AnoGAN_wrapper
+#from additional_methods.wrappers.AnoGAN import AnoGAN_wrapper
 
 ensemble_LOF_krange = range(5,31)
 
 #dict of methods and functions
 method_classes = {
-        "RGraph":RGraph,
+        #"KPCA":KPCA,
+        #"RGraph":RGraph,
         "INNE":INNE,
         "GMM":GMM,
         "KDE":KDE,
@@ -123,19 +124,21 @@ method_classes = {
         "MCD":MCD,
         "OCSVM":OCSVM,
         "PCA":PCA, 
+        "SOD":SOD,
         "EIF":ExtendedIForest,
         "ODIN":ODIN,
         "ECOD":ECOD,
         # "gen2out":gen2Out()
         "AE":AE_wrapper,
         "VAE":VAE_wrapper,
-        "beta-VAE":VAE_wrapper,
-        "AnoGAN":AnoGAN_wrapper
+        "beta-VAE":VAE_wrapper
+        #"AnoGAN":AnoGAN_wrapper
         }
 
 #dict of methods and parameters
 method_parameters = {
-        "RGraph":{"gamma":[5,50,200,350,500], "algorithm":["lasso_cd"]}, #use lasso_cd due to convergence issues
+        #"KPCA":{},
+        #"RGraph":{"gamma":[5,50,200,350,500], "algorithm":["lasso_cd"]}, #use lasso_cd due to convergence issues
         "INNE":{},
         "GMM":{"n_components":range(2,15)},
         "KDE":{},
@@ -162,8 +165,8 @@ method_parameters = {
         # "gen2out":
         "AE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
-        "beta-VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "gamma":[10,20,50], "verbose":[0]},
-        "AnoGAN":{"D_n_layers":[3], "D_shrinkage_factor":[0.3,0.5], "G_n_layers":[3], "G_shrinkage_factor":[0.3,0.5],  "verbose":[0], "epochs":[200]},
+        "beta-VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "gamma":[10,20,50], "verbose":[0]}
+        #"AnoGAN":{"D_n_layers":[3], "D_shrinkage_factor":[0.3,0.5], "G_n_layers":[3], "G_shrinkage_factor":[0.3,0.5],  "verbose":[0], "epochs":[200]},
 
         }
 
