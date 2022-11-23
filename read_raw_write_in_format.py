@@ -15,6 +15,7 @@ import os
 import pickle
 import re
 import json
+import glob
 
 raw_dir = "raw_data"
 target_dir = "formatted_data"
@@ -31,7 +32,7 @@ def get_variance_filter_index(X, max_mode_samples):
     
     _, X_mode_count = mode(X)
     
-    variance_filter = np.array([i <= max_mode_samples for i in np.squeeze(X_mode_count)],dtype=bool)
+    variance_filter = np.array([i < max_mode_samples for i in np.squeeze(X_mode_count)],dtype=bool)
     
     return(variance_filter)
    
@@ -435,6 +436,54 @@ print("Processing: " + file_name)
 print("----------------------------------------------------")
 X = csv_file[csv_file.columns.difference(["Timestamp", "Labels"])].values.astype(np.float64) 
 y = csv_file["Labels"].values.astype(np.float64)
+dataset_name = file_name.lower()[:-4]
+print(dataset_name)
+
+categorical_variables = []
+print("no categorical variables")
+
+data_dict = preprocess_data(X, y)
+
+dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+dataset_summaries.append(dataset_summary)
+
+target_file_name =  dataset_name + ".pickle"
+target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+
+#%% MI-F/V
+CNC_file_folder = "CNC-kaggle"
+
+
+CNC_files = ["experiment_{:02d}.csv".format(i) for i in range(1,19)]
+
+#%% MI-F
+file_name = "MI-F.csv"
+
+print("----------------------------------------------------")
+print("Processing: " + file_name)
+print("----------------------------------------------------")
+
+
+CNC_1_files = ["experiment_{:02d}.csv".format(i) for i in [4,5,7,16]]
+CNC_0_files = list(set(CNC_files) - set(CNC_1_files))
+
+CNC_dfs = []
+for i, CNC_file in enumerate(CNC_1_files):
+    full_path_filename = os.path.join(data_dir, CNC_file_folder, CNC_file)
+    csv_file = pd.read_csv(full_path_filename).iloc[:,:-3]
+    csv_file["label"] = 1
+    CNC_dfs.append(csv_file)
+    
+for i, CNC_file in enumerate(CNC_0_files):
+    full_path_filename = os.path.join(data_dir, CNC_file_folder, CNC_file)
+    csv_file = pd.read_csv(full_path_filename).iloc[:,:-3]
+    csv_file["label"] = 0
+    CNC_dfs.append(csv_file)
+
+data = pd.concat(CNC_dfs)
+X = data[data.columns.difference(["label"])].values.astype(np.float64) 
+y = data["label"].values.astype(np.float64)
 dataset_name = file_name.lower()[:-4]
 print(dataset_name)
 
