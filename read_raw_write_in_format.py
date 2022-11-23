@@ -359,6 +359,44 @@ for file_folder, file_name in zip(sorted([f for f in arff_file_folders if f not 
     target_file_name_with_dir = os.path.join(target_dir, target_file_name)
     pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))  
 
+#%% write extended AE:
+
+data_dir = os.path.join(raw_dir, "extended_AE_data_raw")
+
+if not os.path.exists(target_dir):
+    os.mkdir(target_dir)
+
+csv_file_names = os.listdir(data_dir)
+
+black_list = [] 
+train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
+
+origin = "extended AE"
+
+#%% Write extended AE paper CSVs to pickles:
+file_name = "nasa.csv"
+
+full_path_filename = os.path.join(data_dir, file_name)
+csv_file = pd.read_csv(full_path_filename)
+print("----------------------------------------------------")
+print("Processing: " + file_name)
+print("----------------------------------------------------")
+X = csv_file[csv_file.columns.difference(["Neo Reference ID", "Name", "Close Approach Date", "Epoch Date Close Approach", "Orbiting Body", "Orbit Determination Date", "Equinox", "Hazardous"])].values.astype(np.float64) 
+y_raw = csv_file["Hazardous"].values.astype(np.float64)
+dataset_name = file_name.lower()[:-4]
+print(dataset_name)
+
+categorical_variables = []
+print("no categorical variables")
+
+data_dict = preprocess_data(X, y)
+
+dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+dataset_summaries.append(dataset_summary)
+
+target_file_name =  dataset_name + ".pickle"
+target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))  
 #%% make summary into dataframe and write to latex
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 

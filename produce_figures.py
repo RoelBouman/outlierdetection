@@ -20,7 +20,7 @@ os.makedirs(figure_dir, exist_ok=True)
 
 method_blacklist = []
 double_dataset_blacklist = ["annthyroid"] #completely cluster together with ODDS datasets
-unsolvable_dataset_blacklist = ["speech", "vertebral"]#, "speech_Goldstein"]
+unsolvable_dataset_blacklist = ["speech", "vertebral", "nasa"]#, "speech_Goldstein"]
 own_dataset_blacklist = ["letter-recognition.data"] #own datasets for global/local verification
 dataset_blacklist = unsolvable_dataset_blacklist + own_dataset_blacklist# + double_dataset_blacklist 
 
@@ -306,8 +306,10 @@ table_file.close()
 
 #%% Local datasets
 
-local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "waveform", "glass", "ionosphere"]
+local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "waveform", "glass", "ionosphere", "nasa"]
 
+#check if all local datasets have been calculated/are not in blacklist:
+local_datasets = [dataset for dataset in local_datasets if dataset in metric_dfs["ROC/AUC"].columns]
 
 score_df = metric_dfs["ROC/AUC"][local_datasets]
 
