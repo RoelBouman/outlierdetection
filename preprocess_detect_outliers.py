@@ -254,7 +254,7 @@ for picklefile_name in picklefile_names:
                         pickle.dump(data_dict, open(preprocessed_data_file_name, "wb"))    
                     
                     #make shell call to calculate DeepSVDD
-                    s
+                    
                     
                     continue #skip rest of loop
                 
