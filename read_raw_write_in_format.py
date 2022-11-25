@@ -15,7 +15,6 @@ import os
 import pickle
 import re
 import json
-import glob
 
 raw_dir = "raw_data"
 target_dir = "formatted_data"
@@ -498,10 +497,52 @@ dataset_summaries.append(dataset_summary)
 target_file_name =  dataset_name + ".pickle"
 target_file_name_with_dir = os.path.join(target_dir, target_file_name)
 pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+
+#%% MI-V
+file_name = "MI-V.csv"
+
+print("----------------------------------------------------")
+print("Processing: " + file_name)
+print("----------------------------------------------------")
+
+CNC_skip_files = ["experiment_{:02d}.csv".format(i) for i in [4,5,7,16]]
+CNC_1_files = ["experiment_{:02d}.csv".format(i) for i in [6,8,9,10]]
+CNC_0_files = list(set(CNC_files) - set(CNC_1_files))
+
+CNC_dfs = []
+for i, CNC_file in enumerate(CNC_1_files):
+    full_path_filename = os.path.join(data_dir, CNC_file_folder, CNC_file)
+    csv_file = pd.read_csv(full_path_filename).iloc[:,:-3]
+    csv_file["label"] = 1
+    CNC_dfs.append(csv_file)
+    
+for i, CNC_file in enumerate(CNC_0_files):
+    full_path_filename = os.path.join(data_dir, CNC_file_folder, CNC_file)
+    csv_file = pd.read_csv(full_path_filename).iloc[:,:-3]
+    csv_file["label"] = 0
+    CNC_dfs.append(csv_file)
+
+data = pd.concat(CNC_dfs)
+X = data[data.columns.difference(["label"])].values.astype(np.float64) 
+y = data["label"].values.astype(np.float64)
+dataset_name = file_name.lower()[:-4]
+print(dataset_name)
+
+categorical_variables = []
+print("no categorical variables")
+
+data_dict = preprocess_data(X, y)
+
+dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+dataset_summaries.append(dataset_summary)
+
+target_file_name =  dataset_name + ".pickle"
+target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
 #%% make summary into dataframe and write to latex
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 
-summaries_df = summaries_df.drop(["#numeric variables", "#categorical variables", "#removed variables"], axis=1,) #remove columns irrelevant to current iteration of research
+summaries_df = summaries_df.drop(["#numeric variables", "#categorical variables"], axis=1,) #remove columns irrelevant to current iteration of research
 
 summaries_df.to_csv("tables/datasets_summaries.csv", index=False)
 
