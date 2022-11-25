@@ -9,7 +9,7 @@ import scipy.stats
 from scikit_posthocs import posthoc_nemenyi_friedman
 sns.set()
 
-prune = "methods"        
+prune = "datasets"        
 
 result_dir = "results/result_dir"
 figure_dir = "figures"
@@ -20,8 +20,8 @@ os.makedirs(figure_dir, exist_ok=True)
 
 method_blacklist = []
 double_dataset_blacklist = ["annthyroid"] #completely cluster together with ODDS datasets
-unsolvable_dataset_blacklist = ["speech", "vertebral", "nasa"]#, "speech_Goldstein"]
-own_dataset_blacklist = ["letter-recognition.data"] #own datasets for global/local verification
+unsolvable_dataset_blacklist = ["speech", "vertebral", "hrss_anomalous_standard"]#, "speech_Goldstein"]
+own_dataset_blacklist = [] #own datasets for global/local verification
 dataset_blacklist = unsolvable_dataset_blacklist + own_dataset_blacklist# + double_dataset_blacklist 
 
 
@@ -83,7 +83,12 @@ elif prune == "datasets":
     methods = set.union(*methods_per_dataset)
     
     datasets = [m  for m in method_count_per_dataset if method_count_per_dataset[m] == max_methods]
-
+    
+    incomplete_datasets = list(set(os.listdir(result_dir)) - set(datasets))
+    
+    if len(incomplete_datasets) > 0:
+        print("The following datasets were not calculated for each method:")
+        print(incomplete_datasets)
 
 
 
