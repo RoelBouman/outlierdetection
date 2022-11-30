@@ -20,6 +20,8 @@ from datasets.main import load_dataset
 @click.argument('shrinkage_factor', type=float)
 @click.argument('xp_path', type=click.Path(exists=True))
 @click.argument('data_path', type=click.Path(exists=True))
+@click.argument("target_scorefile_path", type=click.Path(exists=True))
+@click.argument("target_scorefile_path", type=click.Path(exists=True))
 @click.option('--load_config', type=click.Path(exists=True), default=None,
               help='Config JSON-file path (default: None).')
 @click.option('--load_model', type=click.Path(exists=True), default=None,
@@ -190,6 +192,11 @@ def main(dataset_name, n_layers, shrinkage_factor, xp_path, data_path, load_conf
     deep_SVDD.save_results(export_json=xp_path + '/results.json')
     deep_SVDD.save_model(export_model=xp_path + '/model.tar')
     cfg.save_config(export_json=xp_path + '/config.json')
+    
+    test_scores_index_ordered = scores[indices]
+    
+    
+    np.savetxt(target_scorefile_path, test_scores_index_ordered)
 
 
 if __name__ == '__main__':
