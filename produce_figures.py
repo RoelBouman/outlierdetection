@@ -24,6 +24,7 @@ unsolvable_dataset_blacklist = ["speech", "vertebral", "hrss_anomalous_standard"
 own_dataset_blacklist = [] #own datasets for global/local verification
 dataset_blacklist = unsolvable_dataset_blacklist + own_dataset_blacklist# + double_dataset_blacklist 
 
+rename_datasets = {"hrss_anomalous_optimized":"hrss"}
 
 evaluation_metrics = ["ROC/AUC","R_precision", "adjusted_R_precision", "average_precision", "adjusted_average_precision"]
 #%%
@@ -144,7 +145,7 @@ for evaluation_metric in evaluation_metrics:
         #running_dataset = metric_dfs[evaluation_metric].isna().sum().idxmax() 
         #metric_dfs[evaluation_metric].drop(running_dataset, axis=1, inplace=True)
         #metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
-        
+    metric_dfs[evaluation_metric].rename(columns=rename_datasets, inplace=True)
 
     
 #%% calculate friedman  nemenyi and write to table
@@ -311,7 +312,7 @@ table_file.close()
 
 #%% Local datasets
 
-local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "waveform", "glass", "ionosphere", "nasa"]
+local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "glass", "ionosphere", "nasa"]
 
 #check if all local datasets have been calculated/are not in blacklist:
 local_datasets = [dataset for dataset in local_datasets if dataset in metric_dfs["ROC/AUC"].columns]

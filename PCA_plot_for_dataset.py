@@ -21,7 +21,7 @@ csvresult_dir = "csvresult_dir"
 score_dir = "score_dir"
 log_dir = "logs"
 
-method_name = "MCD"
+method_name = "EIF"
 dataset_name = "musk"
 
 
@@ -82,6 +82,10 @@ plt.figure()
 plt.title("score colored plot")
 
 plt.scatter(X_PCA[:,0], X_PCA[:,1], c=scores)
+
+plt.xlabel("PC1 " + str(var_explained[0]*100) + "% var explained")
+plt.ylabel("PC2 " + str(var_explained[1]*100) + "% var explained")
+
 plt.colorbar()
 
 plt.figure()
