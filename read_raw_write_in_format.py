@@ -74,7 +74,7 @@ def make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
                "#variables": n_variables, 
                "#outliers": n_outliers,
                "%outliers": "("+str(outlier_percentage) + "%)", 
-               "#removed duplicates": n_removed_duplicates, 
+               "#duplicates": n_removed_duplicates, 
                "#numeric variables": n_numeric_variables, 
                "#categorical variables": n_categorical_variables, 
                "#removed variables": n_variables_filtered}
@@ -88,7 +88,7 @@ nonmat_data_dir = os.path.join(raw_dir, "ODDS_data_raw", "other_data")
 matfile_names = os.listdir(data_dir)
 
 HDFlist = ["http.mat", "smtp.mat"] #use MATLAB 7.3 file format (need HDF reader)
-black_list = ["ecoli.mat", "breastw.mat", "lympho.mat", "annthyroid.mat"] #ecoli is broken, lympho is removed due to being categorical, breastw has too many outliers %-wise, this is fixed in wbc
+black_list = ["ecoli.mat", "breastw.mat", "lympho.mat"] #ecoli is broken, lympho is removed due to being categorical, breastw has too many outliers %-wise, this is fixed in wbc
 
 train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
@@ -371,7 +371,7 @@ csv_file_names = os.listdir(data_dir)
 black_list = [] 
 train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
-origin = "extended AE"
+origin = "ex-AE"
 
 #%% Write extended AE paper CSVs to pickles:
     
@@ -540,12 +540,18 @@ target_file_name =  dataset_name + ".pickle"
 target_file_name_with_dir = os.path.join(target_dir, target_file_name)
 pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
 #%% make summary into dataframe and write to latex
+
+#filter names:
+filter_rows = ["hrss_anomalous_standard", "speech", "vertebral"]
+rename_rows = {"hrss_anomalous_optimized":"hrss"}
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
+summaries_df.set_index("Name", inplace=True)
 
-summaries_df = summaries_df.drop(["#numeric variables", "#categorical variables"], axis=1,) #remove columns irrelevant to current iteration of research
-
+summaries_df.drop(["#numeric variables", "#categorical variables"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
+summaries_df.drop(filter_rows, inplace=True)
+summaries_df.rename(rename_rows, inplace=True)
 summaries_df.to_csv("tables/datasets_summaries.csv", index=False)
 
 table_file = open("tables/datasets_table.tex","w")
-summaries_df.to_latex(table_file, index=False) 
+summaries_df.to_latex(table_file) 
 table_file.close()
