@@ -73,14 +73,6 @@ def main(dataset_name, n_layers, shrinkage_factor, xp_path, data_path, target_sc
     # Get configuration
     cfg = Config(locals().copy())
 
-    #test prints of paths
-    print(data_path)
-    print(xp_path)
-    print(target_scorefile_path)
-    
-    import  sys
-    print(sys.path)
-
     # Set up logging
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger()
