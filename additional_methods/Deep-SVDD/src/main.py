@@ -185,8 +185,8 @@ def main(dataset_name, n_layers, shrinkage_factor, xp_path, data_path, target_sc
     
     test_scores_index_ordered = scores[indices]
     
-    
     np.savetxt(target_scorefile_path, test_scores_index_ordered)
+    
 
 
 if __name__ == '__main__':

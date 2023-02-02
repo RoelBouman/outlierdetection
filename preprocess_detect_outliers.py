@@ -244,7 +244,7 @@ for picklefile_name in picklefile_names:
                     hyperparameter_setting["method"] = "memory"
                 
                 #process DeepSVDD differently due to lacking sklearn interface
-                #instead: call deepsvdd script from command line with arguments parsed from variables
+                #instead: call deepsvdd script from command line with arguments parsed from variables (also needed for custom Conda env)
                 if method_name == "DeepSVDD":
                     
                     preprocessed_data_file_name = os.path.join(DeepSVDD_dir, "data", picklefile_name)
@@ -254,7 +254,7 @@ for picklefile_name in picklefile_names:
                     if not os.path.exists(preprocessed_data_file_name):
                         scaler = RobustScaler()
                         
-                        X_preprocessed = scaler.fit(X)
+                        X_preprocessed = scaler.fit_transform(X)
                         
                         data_dict = {"X": X_preprocessed, "y": y}
                         
@@ -274,18 +274,37 @@ for picklefile_name in picklefile_names:
                     DeepSVDD_argument_list.append(str(hyperparameter_setting["shrinkage_factor"]))
                     
                     DeepSVDD_argument_list.append(os.path.join("..", "log", picklefile_name))
-                    DeepSVDD_argument_list.append(pickle_dir)
-                    DeepSVDD_argument_list.append(os.path.join("test.csv"))
+                    DeepSVDD_argument_list.append(os.path.join(DeepSVDD_dir, "data"))
+                    
+                    #csv scores
+                    full_target_scoredir = os.path.join(score_csvdir, picklefile_name.replace(".pickle", ""), method_name)
+                    os.makedirs(full_target_scoredir, exist_ok=True)
+                    csv_filename = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
+                    DeepSVDD_argument_list.append(csv_filename) #csv
+
                     
                     #append hardcoded arguments:
                     DeepSVDD_argument_list += shlex.split("--objective one-class --lr 0.0001 --n_epochs 150 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --ae_lr 0.0001 --ae_n_epochs 150 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 0")
                                                   
-                                                  
-                    
                     subprocess.run(DeepSVDD_argument_list)
                     
+                    #read scores, output metrics
+                    outlier_scores = np.loadtxt(csv_filename)
                     
-                    continue #skip rest of loop
+                    method_performance = {method_name:{score_name: score_function(y,outlier_scores) for (score_name, score_function) in score_functions.items()}}
+                    method_performance_df = pd.DataFrame(method_performance).transpose()
+                        
+                    os.makedirs(full_target_dir, exist_ok=True)
+                    with open(target_file_name, 'wb') as handle:
+                        pickle.dump(method_performance_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                    
+                    #also write csv files for easy manual inspection of metrics
+                    full_target_csvdir = os.path.join(target_csvdir, picklefile_name.replace(".pickle", ""), method_name)
+                    os.makedirs(full_target_csvdir, exist_ok=True)
+                    target_csvfile_name = os.path.join(full_target_csvdir, hyperparameter_string+".csv")
+                    method_performance_df.to_csv(target_csvfile_name)
+                    
+                    
                 else:
                     
                     OD_method = OD_class(**hyperparameter_setting)
@@ -304,7 +323,7 @@ for picklefile_name in picklefile_names:
                             continue
                         else:
                             raise e
-                    #resolve 
+                    #resolve issues with memory leaks with keras
                     if method_name in ["AE", "VAE", "beta-VAE"]:
                         
                         gc.collect() 
