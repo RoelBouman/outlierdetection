@@ -19,10 +19,10 @@ os.makedirs(table_dir, exist_ok=True)
 os.makedirs(figure_dir, exist_ok=True)
 
 method_blacklist = []
-double_dataset_blacklist = ["annthyroid"] #completely cluster together with ODDS datasets
+double_dataset_blacklist = [] 
 unsolvable_dataset_blacklist = ["speech", "vertebral", "hrss_anomalous_standard"]#, "speech_Goldstein"]
 own_dataset_blacklist = [] #own datasets for global/local verification
-dataset_blacklist = unsolvable_dataset_blacklist + own_dataset_blacklist# + double_dataset_blacklist 
+dataset_blacklist = unsolvable_dataset_blacklist + own_dataset_blacklist + double_dataset_blacklist 
 
 rename_datasets = {"hrss_anomalous_optimized":"hrss"}
 
