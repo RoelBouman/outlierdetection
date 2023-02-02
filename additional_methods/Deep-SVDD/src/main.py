@@ -3,9 +3,9 @@ import torch
 import logging
 import random
 import numpy as np
+import os
 
 from utils.config import Config
-from utils.visualization.plot_images_grid import plot_images_grid
 from deepSVDD import DeepSVDD
 from datasets.main import load_dataset
 
@@ -18,10 +18,9 @@ from datasets.main import load_dataset
 #@click.argument('net_name', type=click.Choice(['mnist_LeNet', 'cifar10_LeNet', 'cifar10_LeNet_ELU']))
 @click.argument('n_layers', type=int)
 @click.argument('shrinkage_factor', type=float)
-@click.argument('xp_path', type=click.Path(exists=True))
-@click.argument('data_path', type=click.Path(exists=True))
-@click.argument("target_scorefile_path", type=click.Path(exists=True))
-@click.argument("target_scorefile_path", type=click.Path(exists=True))
+@click.argument('xp_path', type=click.Path(exists=False))
+@click.argument('data_path', type=click.Path(exists=False))
+@click.argument("target_scorefile_path", type=click.Path(exists=False))
 @click.option('--load_config', type=click.Path(exists=True), default=None,
               help='Config JSON-file path (default: None).')
 @click.option('--load_model', type=click.Path(exists=True), default=None,
@@ -57,7 +56,7 @@ from datasets.main import load_dataset
               help='Number of workers for data loading. 0 means that the data will be loaded in the main process.')
 @click.option('--normal_class', type=int, default=0,
               help='Specify the normal class of the dataset (all other classes are considered anomalous).')
-def main(dataset_name, n_layers, shrinkage_factor, xp_path, data_path, load_config, load_model, objective, nu, device, seed,
+def main(dataset_name, n_layers, shrinkage_factor, xp_path, data_path, target_scorefile_path, load_config, load_model, objective, nu, device, seed,
          optimizer_name, lr, n_epochs, lr_milestone, batch_size, weight_decay, pretrain, ae_optimizer_name, ae_lr,
          ae_n_epochs, ae_lr_milestone, ae_batch_size, ae_weight_decay, n_jobs_dataloader, normal_class):
     """
@@ -70,14 +69,26 @@ def main(dataset_name, n_layers, shrinkage_factor, xp_path, data_path, load_conf
     :arg DATA_PATH: Root path of data.
     """
 
+    
     # Get configuration
     cfg = Config(locals().copy())
+
+    #test prints of paths
+    print(data_path)
+    print(xp_path)
+    print(target_scorefile_path)
+    
+    import  sys
+    print(sys.path)
 
     # Set up logging
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    if not os.path.exists(xp_path):
+        os.makedirs(xp_path)
+        
     log_file = xp_path + '/log.txt'
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.INFO)
@@ -174,19 +185,6 @@ def main(dataset_name, n_layers, shrinkage_factor, xp_path, data_path, load_conf
     indices, labels, scores = zip(*deep_SVDD.results['test_scores'])
     indices, labels, scores = np.array(indices), np.array(labels), np.array(scores)
     idx_sorted = indices[labels == 0][np.argsort(scores[labels == 0])]  # sorted from lowest to highest anomaly score
-
-    if dataset_name in ('mnist', 'cifar10'):
-
-        if dataset_name == 'mnist':
-            X_normals = dataset.test_set.test_data[idx_sorted[:32], ...].unsqueeze(1)
-            X_outliers = dataset.test_set.test_data[idx_sorted[-32:], ...].unsqueeze(1)
-
-        if dataset_name == 'cifar10':
-            X_normals = torch.tensor(np.transpose(dataset.test_set.test_data[idx_sorted[:32], ...], (0, 3, 1, 2)))
-            X_outliers = torch.tensor(np.transpose(dataset.test_set.test_data[idx_sorted[-32:], ...], (0, 3, 1, 2)))
-
-        plot_images_grid(X_normals, export_img=xp_path + '/normals', title='Most normal examples', padding=2)
-        plot_images_grid(X_outliers, export_img=xp_path + '/outliers', title='Most anomalous examples', padding=2)
 
     # Save results, model, and configuration
     deep_SVDD.save_results(export_json=xp_path + '/results.json')
