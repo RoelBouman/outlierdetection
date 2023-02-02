@@ -274,7 +274,7 @@ for picklefile_name in picklefile_names:
                     DeepSVDD_argument_list.append(str(hyperparameter_setting["shrinkage_factor"]))
                     
                     DeepSVDD_argument_list.append(os.path.join("..", "log", picklefile_name))
-                    DeepSVDD_argument_list.append(os.path.join("..", "..", "..", pickle_dir))                    
+                    DeepSVDD_argument_list.append(pickle_dir)
                     DeepSVDD_argument_list.append(os.path.join("test.csv"))
                     
                     #append hardcoded arguments:
