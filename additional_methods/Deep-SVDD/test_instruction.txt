@@ -1,0 +1,1 @@
+python main.py "wine.pickle" 3 0.2 ../log/mnist_test ../../../formatted_data test.csv --objective one-class --lr 0.00001 --n_epochs 1500 --lr_milestone 500 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --ae_lr 0.00001 --ae_n_epochs 1500 --ae_lr_milestone 500 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 0;

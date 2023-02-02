@@ -31,7 +31,7 @@ def get_variance_filter_index(X, max_mode_samples):
     
     _, X_mode_count = mode(X)
     
-    variance_filter = np.array([i <= max_mode_samples for i in np.squeeze(X_mode_count)],dtype=bool)
+    variance_filter = np.array([i < max_mode_samples for i in np.squeeze(X_mode_count)],dtype=bool)
     
     return(variance_filter)
    
@@ -74,7 +74,7 @@ def make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
                "#variables": n_variables, 
                "#outliers": n_outliers,
                "%outliers": "("+str(outlier_percentage) + "%)", 
-               "#removed duplicates": n_removed_duplicates, 
+               "#duplicates": n_removed_duplicates, 
                "#numeric variables": n_numeric_variables, 
                "#categorical variables": n_categorical_variables, 
                "#removed variables": n_variables_filtered}
@@ -88,7 +88,7 @@ nonmat_data_dir = os.path.join(raw_dir, "ODDS_data_raw", "other_data")
 matfile_names = os.listdir(data_dir)
 
 HDFlist = ["http.mat", "smtp.mat"] #use MATLAB 7.3 file format (need HDF reader)
-black_list = ["ecoli.mat", "breastw.mat", "lympho.mat", "annthyroid.mat"] #ecoli is broken, lympho is removed due to being categorical, breastw has too many outliers %-wise, this is fixed in wbc
+black_list = ["ecoli.mat", "breastw.mat", "lympho.mat"] #ecoli is broken, lympho is removed due to being categorical, breastw has too many outliers %-wise, this is fixed in wbc
 
 train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
@@ -359,13 +359,199 @@ for file_folder, file_name in zip(sorted([f for f in arff_file_folders if f not 
     target_file_name_with_dir = os.path.join(target_dir, target_file_name)
     pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))  
 
+#%% write extended AE:
+
+data_dir = os.path.join(raw_dir, "extended_AE_data_raw")
+
+if not os.path.exists(target_dir):
+    os.mkdir(target_dir)
+
+csv_file_names = os.listdir(data_dir)
+
+black_list = [] 
+train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
+
+origin = "ex-AE"
+
+#%% Write extended AE paper CSVs to pickles:
+    
+#%% nasa:
+file_name = "nasa.csv"
+
+full_path_filename = os.path.join(data_dir, file_name)
+csv_file = pd.read_csv(full_path_filename)
+print("----------------------------------------------------")
+print("Processing: " + file_name)
+print("----------------------------------------------------")
+X = csv_file[csv_file.columns.difference(["Neo Reference ID", "Name", "Close Approach Date", "Epoch Date Close Approach", "Orbiting Body", "Orbit Determination Date", "Equinox", "Hazardous"])].values.astype(np.float64) 
+y = csv_file["Hazardous"].values.astype(np.float64)
+dataset_name = file_name.lower()[:-4]
+print(dataset_name)
+
+categorical_variables = []
+print("no categorical variables")
+
+data_dict = preprocess_data(X, y)
+
+dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+dataset_summaries.append(dataset_summary)
+
+target_file_name =  dataset_name + ".pickle"
+target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+            
+#%% https://www.kaggle.com/datasets/inIT-OWL/high-storage-system-data-for-energy-optimization
+
+file_name = "HRSS_anomalous_optimized.csv"
+
+full_path_filename = os.path.join(data_dir, file_name)
+csv_file = pd.read_csv(full_path_filename)
+print("----------------------------------------------------")
+print("Processing: " + file_name)
+print("----------------------------------------------------")
+X = csv_file[csv_file.columns.difference(["Timestamp", "Labels"])].values.astype(np.float64) 
+y = csv_file["Labels"].values.astype(np.float64)
+dataset_name = file_name.lower()[:-4]
+print(dataset_name)
+
+categorical_variables = []
+print("no categorical variables")
+
+data_dict = preprocess_data(X, y)
+
+dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+dataset_summaries.append(dataset_summary)
+
+target_file_name =  dataset_name + ".pickle"
+target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+
+file_name = "HRSS_anomalous_standard.csv"
+
+full_path_filename = os.path.join(data_dir, file_name)
+csv_file = pd.read_csv(full_path_filename)
+print("----------------------------------------------------")
+print("Processing: " + file_name)
+print("----------------------------------------------------")
+X = csv_file[csv_file.columns.difference(["Timestamp", "Labels"])].values.astype(np.float64) 
+y = csv_file["Labels"].values.astype(np.float64)
+dataset_name = file_name.lower()[:-4]
+print(dataset_name)
+
+categorical_variables = []
+print("no categorical variables")
+
+data_dict = preprocess_data(X, y)
+
+dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+dataset_summaries.append(dataset_summary)
+
+target_file_name =  dataset_name + ".pickle"
+target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+
+#%% MI-F/V
+CNC_file_folder = "CNC-kaggle"
+
+
+CNC_files = ["experiment_{:02d}.csv".format(i) for i in range(1,19)]
+
+#%% MI-F
+file_name = "MI-F.csv"
+
+print("----------------------------------------------------")
+print("Processing: " + file_name)
+print("----------------------------------------------------")
+
+
+CNC_1_files = ["experiment_{:02d}.csv".format(i) for i in [4,5,7,16]]
+CNC_0_files = list(set(CNC_files) - set(CNC_1_files))
+
+CNC_dfs = []
+for i, CNC_file in enumerate(CNC_1_files):
+    full_path_filename = os.path.join(data_dir, CNC_file_folder, CNC_file)
+    csv_file = pd.read_csv(full_path_filename).iloc[:,:-3]
+    csv_file["label"] = 1
+    CNC_dfs.append(csv_file)
+    
+for i, CNC_file in enumerate(CNC_0_files):
+    full_path_filename = os.path.join(data_dir, CNC_file_folder, CNC_file)
+    csv_file = pd.read_csv(full_path_filename).iloc[:,:-3]
+    csv_file["label"] = 0
+    CNC_dfs.append(csv_file)
+
+data = pd.concat(CNC_dfs)
+X = data[data.columns.difference(["label"])].values.astype(np.float64) 
+y = data["label"].values.astype(np.float64)
+dataset_name = file_name.lower()[:-4]
+print(dataset_name)
+
+categorical_variables = []
+print("no categorical variables")
+
+data_dict = preprocess_data(X, y)
+
+dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+dataset_summaries.append(dataset_summary)
+
+target_file_name =  dataset_name + ".pickle"
+target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+
+#%% MI-V
+file_name = "MI-V.csv"
+
+print("----------------------------------------------------")
+print("Processing: " + file_name)
+print("----------------------------------------------------")
+
+CNC_skip_files = ["experiment_{:02d}.csv".format(i) for i in [4,5,7,16]]
+CNC_1_files = ["experiment_{:02d}.csv".format(i) for i in [6,8,9,10]]
+CNC_0_files = list(set(CNC_files) - set(CNC_1_files))
+
+CNC_dfs = []
+for i, CNC_file in enumerate(CNC_1_files):
+    full_path_filename = os.path.join(data_dir, CNC_file_folder, CNC_file)
+    csv_file = pd.read_csv(full_path_filename).iloc[:,:-3]
+    csv_file["label"] = 1
+    CNC_dfs.append(csv_file)
+    
+for i, CNC_file in enumerate(CNC_0_files):
+    full_path_filename = os.path.join(data_dir, CNC_file_folder, CNC_file)
+    csv_file = pd.read_csv(full_path_filename).iloc[:,:-3]
+    csv_file["label"] = 0
+    CNC_dfs.append(csv_file)
+
+data = pd.concat(CNC_dfs)
+X = data[data.columns.difference(["label"])].values.astype(np.float64) 
+y = data["label"].values.astype(np.float64)
+dataset_name = file_name.lower()[:-4]
+print(dataset_name)
+
+categorical_variables = []
+print("no categorical variables")
+
+data_dict = preprocess_data(X, y)
+
+dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+dataset_summaries.append(dataset_summary)
+
+target_file_name =  dataset_name + ".pickle"
+target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
 #%% make summary into dataframe and write to latex
+
+#filter names:
+filter_rows = ["hrss_anomalous_standard", "speech", "vertebral"]
+rename_rows = {"hrss_anomalous_optimized":"hrss"}
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
+summaries_df.set_index("Name", inplace=True)
 
-summaries_df = summaries_df.drop(["#numeric variables", "#categorical variables", "#removed variables"], axis=1,) #remove columns irrelevant to current iteration of research
-
+summaries_df.drop(["#numeric variables", "#categorical variables"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
+summaries_df.drop(filter_rows, inplace=True)
+summaries_df.rename(rename_rows, inplace=True)
 summaries_df.to_csv("tables/datasets_summaries.csv", index=False)
 
 table_file = open("tables/datasets_table.tex","w")
-summaries_df.to_latex(table_file, index=False) 
+summaries_df.to_latex(table_file) 
 table_file.close()

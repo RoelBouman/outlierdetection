@@ -19,11 +19,12 @@ os.makedirs(table_dir, exist_ok=True)
 os.makedirs(figure_dir, exist_ok=True)
 
 method_blacklist = []
-double_dataset_blacklist = ["annthyroid"] #completely cluster together with ODDS datasets
-unsolvable_dataset_blacklist = ["speech", "vertebral"]#, "speech_Goldstein"]
-own_dataset_blacklist = ["letter-recognition.data"] #own datasets for global/local verification
-dataset_blacklist = unsolvable_dataset_blacklist + own_dataset_blacklist# + double_dataset_blacklist 
+double_dataset_blacklist = [] 
+unsolvable_dataset_blacklist = ["speech", "vertebral", "hrss_anomalous_standard"]#, "speech_Goldstein"]
+own_dataset_blacklist = [] #own datasets for global/local verification
+dataset_blacklist = unsolvable_dataset_blacklist + own_dataset_blacklist + double_dataset_blacklist 
 
+rename_datasets = {"hrss_anomalous_optimized":"hrss"}
 
 evaluation_metrics = ["ROC/AUC","R_precision", "adjusted_R_precision", "average_precision", "adjusted_average_precision"]
 #%%
@@ -83,7 +84,12 @@ elif prune == "datasets":
     methods = set.union(*methods_per_dataset)
     
     datasets = [m  for m in method_count_per_dataset if method_count_per_dataset[m] == max_methods]
-
+    
+    incomplete_datasets = list(set(os.listdir(result_dir)) - set(datasets))
+    
+    if len(incomplete_datasets) > 0:
+        print("The following datasets were not calculated for each method:")
+        print(incomplete_datasets)
 
 
 
@@ -139,7 +145,7 @@ for evaluation_metric in evaluation_metrics:
         #running_dataset = metric_dfs[evaluation_metric].isna().sum().idxmax() 
         #metric_dfs[evaluation_metric].drop(running_dataset, axis=1, inplace=True)
         #metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
-        
+    metric_dfs[evaluation_metric].rename(columns=rename_datasets, inplace=True)
 
     
 #%% calculate friedman  nemenyi and write to table
@@ -237,6 +243,7 @@ ax.set_title("Percentage of maximum performance (ROC/AUC)")
 plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot_all_datasets.eps",format="eps")
+plt.savefig("figures/ROCAUC_boxplot_all_datasets.png",format="png")
 plt.show()
 
 
@@ -249,6 +256,7 @@ plot_df = metric_dfs["ROC/AUC"].astype(float)
 clustermap = sns.clustermap(plot_df.transpose().iloc[:,:], method="average",metric="correlation", figsize=(15,15))
 
 clustermap.savefig("figures/clustermap_all_datasets.eps",format="eps")
+clustermap.savefig("figures/clustermap_all_datasets.png",format="png")
 plt.show()
 
 #%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10
@@ -304,8 +312,10 @@ table_file.close()
 
 #%% Local datasets
 
-local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "waveform", "glass", "ionosphere"]
+local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "glass", "ionosphere", "nasa"]
 
+#check if all local datasets have been calculated/are not in blacklist:
+local_datasets = [dataset for dataset in local_datasets if dataset in metric_dfs["ROC/AUC"].columns]
 
 score_df = metric_dfs["ROC/AUC"][local_datasets]
 
@@ -370,6 +380,7 @@ ax.set_title("Percentage of maximum performance (ROC/AUC)")
 plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot_local_datasets.eps",format="eps")
+plt.savefig("figures/ROCAUC_boxplot_local_datasets.png",format="png")
 plt.show()
 
 #%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10
@@ -491,6 +502,7 @@ ax.set_title("Percentage of maximum performance (ROC/AUC)")
 plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot_global_datasets.eps",format="eps")
+plt.savefig("figures/ROCAUC_boxplot_global_datasets.png",format="png")
 plt.show()
 
 #%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10

@@ -4,26 +4,52 @@ TODO:
 	- The Robust Multi-Scale Deep-SVDD Model for Anomaly
 Online Detection of Rolling Bearings
 	- An Ensembled Anomaly Detector for Wafer Fault Detection
+	- https://github.com/Minqi824/ADBench#datasets
+		- backdoor: https://research.unsw.edu.au/projects/unsw-nb15-dataset
+			- must cite 5 papers for dataset
+			- can't use entire dataset (too large), perhaps just use training set
+		- campaign:
+		- fault
+		- magic-gamma
+		- skin
+		- yeast
+		- WBC/WDBC (we have the 30D one), what about the other (9D)?
+	- https://github.com/GuansongPang/ADRepository-Anomaly-detection-datasets/tree/main/numerical%20data/DevNet%20datasets
+	all of these are from the DevNet paper
+		- donors
+		- backdoor
+		- bank
+		- celeba
+		- census
+		- fraud
+	- extended AE for novelty detection:
+		X https://www.kaggle.com/shrutimehta/nasa-asteroids-classification
+		X https://github.com/narayave/mh5_anomaly_detector UNUSABLE
+		X https://www.kaggle.com/datasets/inIT-OWL/high-storage-system-data-for-energy-optimization TWO DATASETS
+		X https://www.kaggle.com/shasun/tool-wear-detection-in-cnc-mill
+		
 
 - Add additional methods:
 	- Deep methods: (in PyOD)
 		X AE
 		X VAE
 		X beta-VAE 
-		- DeepSVDD
+		X DeepSVDD
 		- SO-GAAL
 		- MO-GAAL
 		X AnoGAN
 		- LUNAR
 	- DeepSVDD from LukasRUFF
+	- DAGMM: https://github.com/mperezcarrasco/PyTorch-DAGMM
 	- Non deep:
 		- Robust KDE
 		- SVDD (https://github.com/iqiukp/SVDD-Python)
-		- Ensemble GMM (see Emmot et al.)
+		- Ensemble GMM (see Emmot et al.) (likely too much work)
 		- random cut forests
-		X PyOD:
+		- PyOD:
 			X GMM			
 			X i-nne
 			X KDE
 			X R-graph
+			- KPCA: needs %variance interface to work
 
