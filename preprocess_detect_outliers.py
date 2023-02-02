@@ -12,6 +12,10 @@ from sklearn.preprocessing import RobustScaler
 from sklearn.model_selection import ParameterGrid
 from evaluation_metrics import adjusted_precision_n_scores, average_precision, adjusted_average_precision
 
+import shlex
+import subprocess
+
+
 import argparse
 
 pickle_dir = "formatted_data"
@@ -22,6 +26,8 @@ score_dir = "score_dir"
 log_dir = "logs"
 preprocessed_data_dir = "preprocessed_data"
 DeepSVDD_dir = "additional_methods/Deep-SVDD"
+
+DeepSVDD_conda_env = "myenv"
 
 #picklefile_names = os.listdir(pickle_dir)
 
@@ -48,7 +54,7 @@ arg_parser = argparse.ArgumentParser(description='Run selected methods over all 
 arg_parser.add_argument('--method',
                        metavar='M',
                        dest='method',
-                       default='all',
+                       default='DeepSVDD',
                        type=str,
                        help='The method that you would like to run')
 
@@ -131,8 +137,9 @@ method_classes = {
         # "gen2out":gen2Out()
         "AE":AE_wrapper,
         "VAE":VAE_wrapper,
-        "beta-VAE":VAE_wrapper
+        "beta-VAE":VAE_wrapper,
         #"AnoGAN":AnoGAN_wrapper
+        "DeepSVDD":[]#empty, because no sklearn object, but rather hardcoded script
         }
 
 #dict of methods and parameters
@@ -157,7 +164,7 @@ method_parameters = {
         "LOF":{"n_neighbors":range(5,31)},
         "MCD":{"support_fraction":[0.6,0.7,0.8,0.9], "assume_centered":[True]},
         "OCSVM":{"kernel":["rbf"], "gamma":["auto"], "nu":[0.5,0.6,0.7,0.8,0.9]},
-         "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
+        "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
         "SOD":{"n_neighbors":[20, 25 ,30], "ref_set":[10,14,18], "alpha":[0.7,0.8,0.9]},
         "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
         "ODIN":{"n_neighbors":range(5,31)},
@@ -165,9 +172,9 @@ method_parameters = {
         # "gen2out":
         "AE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
-        "beta-VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "gamma":[10,20,50], "verbose":[0]}
+        "beta-VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "gamma":[10,20,50], "verbose":[0]},
         #"AnoGAN":{"D_n_layers":[3], "D_shrinkage_factor":[0.3,0.5], "G_n_layers":[3], "G_shrinkage_factor":[0.3,0.5],  "verbose":[0], "epochs":[200]},
-
+        "DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]}
         }
 
 #%% 
@@ -240,7 +247,7 @@ for picklefile_name in picklefile_names:
                 #instead: call deepsvdd script from command line with arguments parsed from variables
                 if method_name == "DeepSVDD":
                     
-                    preprocessed_data_file_name = os.path.join(DeepSVDD_dir, picklefile_name)
+                    preprocessed_data_file_name = os.path.join(DeepSVDD_dir, "data", picklefile_name)
                     #preprocess data and write to csv:
                     
                     #check if preprocessed data already exists:, if not preprocess and write data
@@ -254,78 +261,98 @@ for picklefile_name in picklefile_names:
                         pickle.dump(data_dict, open(preprocessed_data_file_name, "wb"))    
                     
                     #make shell call to calculate DeepSVDD
+                    #python main.py "wine.pickle" 3 0.2 ../log/mnist_test ../../../formatted_data --objective one-class --lr 0.00001 --n_epochs 1500 --lr_milestone 500 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --ae_lr 0.00001 --ae_n_epochs 1500 --ae_lr_milestone 500 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 0;
+                    DeepSVDD_argument_list = shlex.split("conda run -n")
+                    DeepSVDD_argument_list.append(DeepSVDD_conda_env)
+                    
+                    DeepSVDD_argument_list.append("python")
+                    DeepSVDD_argument_list.append(os.path.join(DeepSVDD_dir,"src", "main.py"))
+                    
+                    DeepSVDD_argument_list.append(picklefile_name)
+                    
+                    DeepSVDD_argument_list.append(str(hyperparameter_setting["n_layers"]))
+                    DeepSVDD_argument_list.append(str(hyperparameter_setting["shrinkage_factor"]))
+                    
+                    DeepSVDD_argument_list.append(os.path.join("..", "log", picklefile_name))
+                    DeepSVDD_argument_list.append(os.path.join("..", "..", "..", pickle_dir))                    
+                    DeepSVDD_argument_list.append(os.path.join("test.csv"))
+                    
+                    #append hardcoded arguments:
+                    DeepSVDD_argument_list += shlex.split("--objective one-class --lr 0.0001 --n_epochs 150 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --ae_lr 0.0001 --ae_n_epochs 150 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 0")
+                                                  
+                                                  
+                    
+                    subprocess.run(DeepSVDD_argument_list)
                     
                     
                     continue #skip rest of loop
-                
-                
-                OD_method = OD_class(**hyperparameter_setting)
-                
-                #Temporary fix for ECOD:
-                if method_name == "ECOD" and hasattr(OD_method, "X_train"):
-                    delattr(OD_method, "X_train")
-                    
-                pipeline = make_pipeline(RobustScaler(), OD_method)
-                
-                try:
-                    pipeline.fit(X)
-                except ValueError as e: #Catch error when CBLOF fails due to configuration
-                    if str(e) == "Could not form valid cluster separation. Please change n_clusters or change clustering method":
-                        print("Separation invalid, skipping this hyperparameter setting")
-                        continue
-                    else:
-                        raise e
-                #resolve 
-                if method_name in ["AE", "VAE", "beta-VAE"]:
-                    
-                    gc.collect() 
-                    K.clear_session() 
-                
-                #correct for non pyod-like behaviour from gen2out
-                if method_name == "gen2out":
-                    outlier_scores = pipeline[1].decision_function(pipeline.transform(X))
                 else:
-                    outlier_scores = pipeline[1].decision_scores_
-                
-                method_performance = {method_name:{score_name: score_function(y,outlier_scores) for (score_name, score_function) in score_functions.items()}}
-                method_performance_df = pd.DataFrame(method_performance).transpose()
                     
-                os.makedirs(full_target_dir, exist_ok=True)
-                with open(target_file_name, 'wb') as handle:
-                    pickle.dump(method_performance_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
-                
-                #also write csv files for easy manual inspection
-                full_target_csvdir = os.path.join(target_csvdir, picklefile_name.replace(".pickle", ""), method_name)
-                os.makedirs(full_target_csvdir, exist_ok=True)
-                target_csvfile_name = os.path.join(full_target_csvdir, hyperparameter_string+".csv")
-                method_performance_df.to_csv(target_csvfile_name)
-                
-                full_target_scoredir = os.path.join(score_csvdir, picklefile_name.replace(".pickle", ""), method_name)
-                os.makedirs(full_target_scoredir, exist_ok=True)
-                target_scorefile_name = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
-                np.savetxt(target_scorefile_name, outlier_scores)
-                
-                #write Keras history for relevant neural methods
-                if method_name in ["VAE", "beta-VAE", "AE", "AnoGAN"]:
-                    if method_name == "AnoGAN":
-                        history_df = pd.DataFrame({"discriminator_loss":pipeline[1].hist_loss_discriminator, "generator_loss":pipeline[1].hist_loss_generator})
+                    OD_method = OD_class(**hyperparameter_setting)
+                    
+                    #Temporary fix for ECOD:
+                    if method_name == "ECOD" and hasattr(OD_method, "X_train"):
+                        delattr(OD_method, "X_train")
+                        
+                    pipeline = make_pipeline(RobustScaler(), OD_method)
+                    
+                    try:
+                        pipeline.fit(X)
+                    except ValueError as e: #Catch error when CBLOF fails due to configuration
+                        if str(e) == "Could not form valid cluster separation. Please change n_clusters or change clustering method":
+                            print("Separation invalid, skipping this hyperparameter setting")
+                            continue
+                        else:
+                            raise e
+                    #resolve 
+                    if method_name in ["AE", "VAE", "beta-VAE"]:
+                        
+                        gc.collect() 
+                        K.clear_session() 
+                    
+                    #correct for non pyod-like behaviour from gen2out
+                    if method_name == "gen2out":
+                        outlier_scores = pipeline[1].decision_function(pipeline.transform(X))
                     else:
-                        history = pipeline[1].history_
-                        history_df = pd.DataFrame(history)
-
-
+                        outlier_scores = pipeline[1].decision_scores_
                     
-                    full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
-                    target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".pickle")
-                    
+                    method_performance = {method_name:{score_name: score_function(y,outlier_scores) for (score_name, score_function) in score_functions.items()}}
+                    method_performance_df = pd.DataFrame(method_performance).transpose()
+                        
                     os.makedirs(full_target_dir, exist_ok=True)
                     with open(target_file_name, 'wb') as handle:
-                        pickle.dump(history_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
-                        
-                    full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
-                    target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".csv")
+                        pickle.dump(method_performance_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
                     
-                    os.makedirs(full_target_dir, exist_ok=True)
-
-                    history_df.to_csv(target_file_name)
+                    #also write csv files for easy manual inspection
+                    full_target_csvdir = os.path.join(target_csvdir, picklefile_name.replace(".pickle", ""), method_name)
+                    os.makedirs(full_target_csvdir, exist_ok=True)
+                    target_csvfile_name = os.path.join(full_target_csvdir, hyperparameter_string+".csv")
+                    method_performance_df.to_csv(target_csvfile_name)
+                    
+                    full_target_scoredir = os.path.join(score_csvdir, picklefile_name.replace(".pickle", ""), method_name)
+                    os.makedirs(full_target_scoredir, exist_ok=True)
+                    target_scorefile_name = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
+                    np.savetxt(target_scorefile_name, outlier_scores)
+                    
+                    #write Keras history for relevant neural methods
+                    if method_name in ["VAE", "beta-VAE", "AE", "AnoGAN"]:
+                        if method_name == "AnoGAN":
+                            history_df = pd.DataFrame({"discriminator_loss":pipeline[1].hist_loss_discriminator, "generator_loss":pipeline[1].hist_loss_generator})
+                        else:
+                            history = pipeline[1].history_
+                            history_df = pd.DataFrame(history)
+                        
+                        full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
+                        target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".pickle")
+                        
+                        os.makedirs(full_target_dir, exist_ok=True)
+                        with open(target_file_name, 'wb') as handle:
+                            pickle.dump(history_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                            
+                        full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
+                        target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".csv")
+                        
+                        os.makedirs(full_target_dir, exist_ok=True)
+    
+                        history_df.to_csv(target_file_name)
 
