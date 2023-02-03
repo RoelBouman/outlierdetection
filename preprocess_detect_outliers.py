@@ -287,7 +287,7 @@ for picklefile_name in picklefile_names:
                     while X.shape[0] % batch_size == 1:
                         batch_size+=1
                     #append hardcoded arguments:
-                    DeepSVDD_argument_list += shlex.split("--objective one-class --lr 0.0001 --n_epochs 150 --lr_milestone 50 --batch_size {} --weight_decay 0.5e-6 --pretrain True --ae_lr 0.0001 --ae_n_epochs 150 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 0".format(batch_size))
+                    DeepSVDD_argument_list += shlex.split("--objective one-class --lr 0.0001 --n_epochs 150 --lr_milestone 50 --batch_size {0} --weight_decay 0.5e-6 --pretrain True --ae_lr 0.0001 --ae_n_epochs 150 --ae_lr_milestone 50 --ae_batch_size {0} --ae_weight_decay 0.5e-3 --normal_class 0".format(batch_size))
                                                   
                     subprocess.run(DeepSVDD_argument_list)
                     
