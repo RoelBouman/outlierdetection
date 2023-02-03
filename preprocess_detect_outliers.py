@@ -261,7 +261,6 @@ for picklefile_name in picklefile_names:
                         pickle.dump(data_dict, open(preprocessed_data_file_name, "wb"))    
                     
                     #make shell call to calculate DeepSVDD
-                    #python main.py "wine.pickle" 3 0.2 ../log/mnist_test ../../../formatted_data --objective one-class --lr 0.00001 --n_epochs 1500 --lr_milestone 500 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --ae_lr 0.00001 --ae_n_epochs 1500 --ae_lr_milestone 500 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 0;
                     DeepSVDD_argument_list = shlex.split("conda run -n")
                     DeepSVDD_argument_list.append(DeepSVDD_conda_env)
                     
@@ -281,10 +280,14 @@ for picklefile_name in picklefile_names:
                     os.makedirs(full_target_scoredir, exist_ok=True)
                     csv_filename = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
                     DeepSVDD_argument_list.append(csv_filename) #csv
-
                     
+                    
+                    #calculate batch size (n_samples % batchsize != 1, otherwise batchnorm breaks)
+                    batch_size = 200
+                    while X.shape[0] % batch_size == 1:
+                        batch_size+=1
                     #append hardcoded arguments:
-                    DeepSVDD_argument_list += shlex.split("--objective one-class --lr 0.0001 --n_epochs 150 --lr_milestone 50 --batch_size 200 --weight_decay 0.5e-6 --pretrain True --ae_lr 0.0001 --ae_n_epochs 150 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 0")
+                    DeepSVDD_argument_list += shlex.split("--objective one-class --lr 0.0001 --n_epochs 150 --lr_milestone 50 --batch_size {} --weight_decay 0.5e-6 --pretrain True --ae_lr 0.0001 --ae_n_epochs 150 --ae_lr_milestone 50 --ae_batch_size 200 --ae_weight_decay 0.5e-3 --normal_class 0".format(batch_size))
                                                   
                     subprocess.run(DeepSVDD_argument_list)
                     
