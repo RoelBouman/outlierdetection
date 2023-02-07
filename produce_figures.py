@@ -11,7 +11,7 @@ sns.set()
 
 prune = "datasets"        
 
-result_dir = "results/result_dir"
+result_dir = "results/csvresult_dir"
 figure_dir = "figures"
 table_dir = "tables"
 
@@ -111,15 +111,16 @@ for dataset_name in datasets:
         
             result_folder_path = os.path.join(result_dir, dataset_name, method_name)
             
-            hyperparameter_pickles = os.listdir(result_folder_path)
-            hyperparameter_settings = [filename.replace(".pickle", "") for filename in hyperparameter_pickles]
+            hyperparameter_csvs = os.listdir(result_folder_path)
+            hyperparameter_settings = [filename.replace(".csv", "") for filename in hyperparameter_csvs]
             
             results_per_setting = {}
-            for hyperparameter_pickle, hyperparameter_setting in zip(hyperparameter_pickles, hyperparameter_settings):
+            for hyperparameter_csv, hyperparameter_setting in zip(hyperparameter_csvs, hyperparameter_settings):
                 
-                full_path_filename = os.path.join(result_folder_path, hyperparameter_pickle)
+                full_path_filename = os.path.join(result_folder_path, hyperparameter_csv)
                 
-                results_per_setting[hyperparameter_setting] = pickle.load(open(full_path_filename, 'rb'))
+                #results_per_setting[hyperparameter_setting] = pickle.load(open(full_path_filename, 'rb'))
+                results_per_setting[hyperparameter_setting] = pd.read_csv(full_path_filename)
                 
             for evaluation_metric in evaluation_metrics: 
                 metric_per_setting = {setting:results[evaluation_metric].values[0] for setting, results in results_per_setting.items()}
