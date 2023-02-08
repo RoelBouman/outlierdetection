@@ -9,7 +9,7 @@ import scipy.stats
 from scikit_posthocs import posthoc_nemenyi_friedman
 sns.set()
 
-prune = "datasets"        
+prune = "methods"        
 
 result_dir = "results/csvresult_dir"
 figure_dir = "figures"

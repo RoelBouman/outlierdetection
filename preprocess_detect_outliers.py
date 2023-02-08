@@ -54,7 +54,7 @@ arg_parser = argparse.ArgumentParser(description='Run selected methods over all 
 arg_parser.add_argument('--method',
                        metavar='M',
                        dest='method',
-                       default='all',
+                       default='ALAD',
                        type=str,
                        help='The method that you would like to run')
 
@@ -101,6 +101,7 @@ from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
 from pyod.models.sod import SOD
 from pyod.models.ecod import ECOD
+from pyod.models.lunar import LUNAR
 #from pyod.models.sos import SOS #SOS also has memory allocation issues.
 from pyod.models.combination import maximization
 
@@ -108,10 +109,13 @@ from additional_methods.ensemble import  Ensemble
 from additional_methods.wrappers.ExtendedIForest import ExtendedIForest
 from additional_methods.ODIN import ODIN
 from additional_methods.gen2out.gen2out import gen2Out
+from additional_methods.SVDD.src.BaseSVDD import BaseSVDD
 
 from additional_methods.wrappers.AE import AE_wrapper
 from additional_methods.wrappers.VAE import VAE_wrapper
 #from additional_methods.wrappers.AnoGAN import AnoGAN_wrapper
+from additional_methods.wrappers.rrcf import rrcf_wrapper
+from additional_methods.wrappers.ALAD import ALAD_wrapper
 
 ensemble_LOF_krange = range(5,31)
 
@@ -143,12 +147,16 @@ method_classes = {
         "ODIN":ODIN,
         "ECOD":ECOD,
         "gen2out":gen2Out,
-        "inverse-gen2out":gen2Out,
         "AE":AE_wrapper,
         "VAE":VAE_wrapper,
         "beta-VAE":VAE_wrapper,
+        "LUNAR":LUNAR,
         #"AnoGAN":AnoGAN_wrapper
-        "DeepSVDD":[]#empty, because no sklearn object, but rather hardcoded script
+        "DeepSVDD":[],#empty, because no sklearn object, but rather hardcoded script
+        "sb-DeepSVDD":[],
+        "SVDD":BaseSVDD,
+        "RRCF":rrcf_wrapper,
+        "ALAD":ALAD_wrapper
         }
 
 #dict of methods and parameters
@@ -179,12 +187,17 @@ method_parameters = {
         "ODIN":{"n_neighbors":range(5,31)},
         "ECOD":{},
         "gen2out":{},
-        "inverse-gen2out":{},
         "AE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "beta-VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "gamma":[10,20,50], "verbose":[0]},
         #"AnoGAN":{"D_n_layers":[3], "D_shrinkage_factor":[0.3,0.5], "G_n_layers":[3], "G_shrinkage_factor":[0.3,0.5],  "verbose":[0], "epochs":[200]},
-        "DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]}
+        "LUNAR":{"n_neighbours":[5, 10, 15, 20, 25 ,30]}, #parameter is inconsistently named n_neighbours 
+        "DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
+        "sb-DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
+        "SVDD":{},
+        "RRCF":{"n_trees":[1000], "tree_size":[128,256,512,1024]},
+        "ALAD":{"n_layers":[3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "output_activation":["linear"], "verbose":[0]}
+
         }
 
 #%% 
@@ -198,8 +211,8 @@ else:
 
 
 if skip_CBLOF:
-    all_methods_to_run.pop("CBLOF")
-    all_methods_to_run.pop("u-CBLOF")
+    all_methods_to_run.pop("CBLOF", False)
+    all_methods_to_run.pop("u-CBLOF", False)
 #%% loop over all data, but do not reproduce existing results
 
 
@@ -259,7 +272,7 @@ for picklefile_name in picklefile_names:
                 
                 #process DeepSVDD differently due to lacking sklearn interface
                 #instead: call deepsvdd script from command line with arguments parsed from variables (also needed for custom Conda env)
-                if method_name == "DeepSVDD":
+                if method_name in ["DeepSVDD", "sb-DeepSVDD"]:
                     
                     preprocessed_data_file_name = os.path.join(DeepSVDD_dir, "data", picklefile_name)
                     #preprocess data and write to csv:
@@ -301,7 +314,12 @@ for picklefile_name in picklefile_names:
                     while X.shape[0] % batch_size == 1:
                         batch_size+=1
                     #append hardcoded arguments:
-                    DeepSVDD_argument_list += shlex.split("--objective one-class --lr 0.0001 --n_epochs 150 --lr_milestone 50 --batch_size {0} --weight_decay 0.5e-6 --pretrain True --ae_lr 0.0001 --ae_n_epochs 150 --ae_lr_milestone 50 --ae_batch_size {0} --ae_weight_decay 0.5e-3 --normal_class 0".format(batch_size))
+                    DeepSVDD_argument_list.append("--objective") #csv
+                    if method_name == "DeepSVDD":
+                        DeepSVDD_argument_list.append("one-class")
+                    elif method_name == "sb-DeepSVDD":
+                        DeepSVDD_argument_list.append("soft-boundary")
+                    DeepSVDD_argument_list += shlex.split("--lr 0.0001 --n_epochs 150 --lr_milestone 50 --batch_size {0} --weight_decay 0.5e-6 --pretrain True --ae_lr 0.0001 --ae_n_epochs 150 --ae_lr_milestone 50 --ae_batch_size {0} --ae_weight_decay 0.5e-3 --normal_class 0".format(batch_size))
                                                   
                     subprocess.run(DeepSVDD_argument_list)
                     
@@ -346,11 +364,11 @@ for picklefile_name in picklefile_names:
                         gc.collect() 
                         K.clear_session() 
                     
-                    #correct for non pyod-like behaviour from gen2out
+                    #correct for non pyod-like behaviour from gen2out, needs inversion of scores
                     if method_name == "gen2out":
-                        outlier_scores = pipeline[1].decision_function(RobustScaler().fit_transform(X))
-                    elif method_name == "inverse-gen2out":
-                        outlier_scores = -pipeline[1].decision_function(RobustScaler().fit_transform(X))
+                        outlier_scores = -pipeline[1].decision_function(RobustScaler().fit_transform(X)) 
+                    if method_name == "SVDD":
+                        outlier_scores = -pipeline[1].decision_function(RobustScaler().fit_transform(X)) 
                     else:
                         outlier_scores = pipeline[1].decision_scores_
                     

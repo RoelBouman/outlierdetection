@@ -34,18 +34,19 @@ Online Detection of Rolling Bearings
 		X AE
 		X VAE
 		X beta-VAE 
-		X DeepSVDD
+		X DeepSVDD #not used in favor of LukasRuff version
 		- SO-GAAL
 		- MO-GAAL
-		X AnoGAN
-		- LUNAR
-	- DeepSVDD from LukasRUFF
-	- DAGMM: https://github.com/mperezcarrasco/PyTorch-DAGMM
+		- AnoGAN (too complex to get to work?)
+		X LUNAR
+		- ALAD
+	X DeepSVDD from LukasRUFF
+	- DAGMM: https://github.com/mperezcarrasco/PyTorch-DAGMM ( no easily adaptable implementations available)
 	- Non deep:
-		- Robust KDE
-		- SVDD (https://github.com/iqiukp/SVDD-Python)
-		- Ensemble GMM (see Emmot et al.) (likely too much work)
-		- random cut forests
+		X Robust KDE #no implementations.
+		X SVDD (https://github.com/iqiukp/SVDD-Python)
+		X Ensemble GMM (see Emmot et al.) (likely too much work) #no implementations
+		X random cut forests (https://github.com/kLabUM/rrcf)
 		- PyOD:
 			X GMM			
 			X i-nne
