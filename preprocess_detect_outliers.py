@@ -54,7 +54,7 @@ arg_parser = argparse.ArgumentParser(description='Run selected methods over all 
 arg_parser.add_argument('--method',
                        metavar='M',
                        dest='method',
-                       default='DeepSVDD',
+                       default='all',
                        type=str,
                        help='The method that you would like to run')
 
@@ -65,11 +65,19 @@ arg_parser.add_argument('--verbose',
                        type=int,
                        help='The verbosity of the pipeline execution.')
 
+arg_parser.add_argument('--skip-CBLOF',
+                       metavar='C',
+                       dest='skip_CBLOF',
+                       default=1,
+                       type=int,
+                       help='Bool to skip CBLOF execution. When CBLOF has been calculated previously, redundant invalid clusterings will be calculated.')
+
 # Execute the parse_args() method
 parsed_args = arg_parser.parse_args()
 
 method_to_run = parsed_args.method
 verbose = parsed_args.verbose
+skip_CBLOF = parsed_args.skip_CBLOF
 
 #%% Define parameter settings and methods
 
@@ -99,7 +107,7 @@ from pyod.models.combination import maximization
 from additional_methods.ensemble import  Ensemble
 from additional_methods.wrappers.ExtendedIForest import ExtendedIForest
 from additional_methods.ODIN import ODIN
-#from additional_methods.gen2out.gen2out import gen2Out
+from additional_methods.gen2out.gen2out import gen2Out
 
 from additional_methods.wrappers.AE import AE_wrapper
 from additional_methods.wrappers.VAE import VAE_wrapper
@@ -134,7 +142,8 @@ method_classes = {
         "EIF":ExtendedIForest,
         "ODIN":ODIN,
         "ECOD":ECOD,
-        # "gen2out":gen2Out()
+        "gen2out":gen2Out,
+        "inverse-gen2out":gen2Out,
         "AE":AE_wrapper,
         "VAE":VAE_wrapper,
         "beta-VAE":VAE_wrapper,
@@ -169,7 +178,8 @@ method_parameters = {
         "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
         "ODIN":{"n_neighbors":range(5,31)},
         "ECOD":{},
-        # "gen2out":
+        "gen2out":{},
+        "inverse-gen2out":{},
         "AE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "beta-VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "gamma":[10,20,50], "verbose":[0]},
@@ -186,6 +196,10 @@ else:
     except KeyError:
         raise KeyError("Specified method is not found in the list of available methods.")
 
+
+if skip_CBLOF:
+    all_methods_to_run.pop("CBLOF")
+    all_methods_to_run.pop("u-CBLOF")
 #%% loop over all data, but do not reproduce existing results
 
 
@@ -334,7 +348,9 @@ for picklefile_name in picklefile_names:
                     
                     #correct for non pyod-like behaviour from gen2out
                     if method_name == "gen2out":
-                        outlier_scores = pipeline[1].decision_function(pipeline.transform(X))
+                        outlier_scores = pipeline[1].decision_function(RobustScaler().fit_transform(X))
+                    elif method_name == "inverse-gen2out":
+                        outlier_scores = -pipeline[1].decision_function(RobustScaler().fit_transform(X))
                     else:
                         outlier_scores = pipeline[1].decision_scores_
                     
