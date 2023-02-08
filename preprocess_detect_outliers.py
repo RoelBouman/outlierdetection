@@ -391,9 +391,11 @@ for picklefile_name in picklefile_names:
                     np.savetxt(target_scorefile_name, outlier_scores)
                     
                     #write Keras history for relevant neural methods
-                    if method_name in ["VAE", "beta-VAE", "AE", "AnoGAN"]:
+                    if method_name in ["VAE", "beta-VAE", "AE", "AnoGAN", "ALAD"]:
                         if method_name == "AnoGAN":
                             history_df = pd.DataFrame({"discriminator_loss":pipeline[1].hist_loss_discriminator, "generator_loss":pipeline[1].hist_loss_generator})
+                        elif method_name =="ALAD":
+                            history_df = pd.DataFrame({"discriminator_loss":pipeline[1].hist_loss_disc, "generator_loss":pipeline[1].hist_loss_gen})
                         else:
                             history = pipeline[1].history_
                             history_df = pd.DataFrame(history)
