@@ -17,9 +17,12 @@ class rrcf_wrapper():
         tree_size = min(self.tree_size, n)
         
         forest = []
+        
+        if self.n_trees * tree_size < n:
+            self.n_trees = np.ceil(n / tree_size) #increase n_trees if not all samples are covered.
         while len(forest) < self.n_trees:
             # Select random subsets of points uniformly from point set
-            ixs = np.random.choice(n, size=(n // tree_size, tree_size),
+            ixs = np.random.choice(n, size=(n//tree_size, tree_size), 
                                    replace=False)
             # Add sampled trees to forest
             trees = [rrcf.RCTree(X[ix], index_labels=ix) for ix in ixs]
