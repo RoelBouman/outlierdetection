@@ -54,7 +54,7 @@ arg_parser = argparse.ArgumentParser(description='Run selected methods over all 
 arg_parser.add_argument('--method',
                        metavar='M',
                        dest='method',
-                       default='ALAD',
+                       default='all',
                        type=str,
                        help='The method that you would like to run')
 
@@ -102,6 +102,8 @@ from pyod.models.pca import PCA
 from pyod.models.sod import SOD
 from pyod.models.ecod import ECOD
 from pyod.models.lunar import LUNAR
+from pyod.models.so_gaal import SO_GAAL
+from pyod.models.mo_gaal import MO_GAAL
 #from pyod.models.sos import SOS #SOS also has memory allocation issues.
 from pyod.models.combination import maximization
 
@@ -154,9 +156,11 @@ method_classes = {
         #"AnoGAN":AnoGAN_wrapper
         "DeepSVDD":[],#empty, because no sklearn object, but rather hardcoded script
         "sb-DeepSVDD":[],
-        "SVDD":BaseSVDD,
-        "RRCF":rrcf_wrapper,
-        "ALAD":ALAD_wrapper
+        #"SVDD":BaseSVDD,
+        #"RRCF":rrcf_wrapper,
+        "ALAD":ALAD_wrapper,
+        "SO-GAAL":SO_GAAL,
+        #"MO-GAAL":MO_GAAL
         }
 
 #dict of methods and parameters
@@ -194,10 +198,11 @@ method_parameters = {
         "LUNAR":{"n_neighbours":[5, 10, 15, 20, 25 ,30]}, #parameter is inconsistently named n_neighbours 
         "DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
         "sb-DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
-        "SVDD":{},
-        "RRCF":{"n_trees":[1000], "tree_size":[128,256,512,1024]},
-        "ALAD":{"n_layers":[3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "output_activation":["linear"], "verbose":[0]}
-
+        #"SVDD":{},
+        #"RRCF":{"n_trees":[1000], "tree_size":[128,256,512,1024]}, #minimum n_trees, when tree_size*n_trees < n_samples, more trees are used.
+        "ALAD":{"n_layers":[3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "output_activation":["linear"], "verbose":[0]},
+        "SO-GAAL":{"stop_epochs":[50]},
+        #"MO-GAAL":{"stop_epochs":[50]}
         }
 
 #%% 
@@ -367,7 +372,7 @@ for picklefile_name in picklefile_names:
                     #correct for non pyod-like behaviour from gen2out, needs inversion of scores
                     if method_name == "gen2out":
                         outlier_scores = -pipeline[1].decision_function(RobustScaler().fit_transform(X)) 
-                    if method_name == "SVDD":
+                    elif method_name == "SVDD":
                         outlier_scores = -pipeline[1].decision_function(RobustScaler().fit_transform(X)) 
                     else:
                         outlier_scores = pipeline[1].decision_scores_
