@@ -535,8 +535,6 @@ target_file_name_with_dir = os.path.join(target_dir, target_file_name)
 pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
 
 #%% ADBENCH
-
-
 data_dir = os.path.join(raw_dir, "ADBench_data_raw")
 
 if not os.path.exists(target_dir):
@@ -563,6 +561,49 @@ for file_name in [f for f in os.listdir(data_dir) if f not in black_list]:
     print("----------------------------------------------------")
     X = npz_file["X"].astype(np.float64) 
     y = npz_file["y"].astype(np.float64)
+    
+    try:
+        categorical_variables = categorical_variables_per_dataset[dataset_name]
+        print("some categorical variables")
+    except KeyError:
+        categorical_variables = []
+        print("no categorical variables")
+    
+    data_dict = preprocess_data(X, y)
+    
+    dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+    dataset_summaries.append(dataset_summary)
+    
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    
+#%% ADRepository
+
+
+data_dir = os.path.join(raw_dir, "ADRepository_data_raw")
+
+if not os.path.exists(target_dir):
+    os.mkdir(target_dir)
+
+csv_file_names = os.listdir(data_dir)
+
+black_list = ["census-income-full-mixed-binarized.tar.xz"]  #read tar file separately
+
+origin = "ADRepository"
+
+for file_name in [f for f in os.listdir(data_dir) if f not in black_list]:
+    
+    full_path_filename = os.path.join(data_dir, file_name)
+    csv_file = pd.read_csv(full_path_filename)
+    
+    dataset_name = re.search('(.+?)[_-].+?\.csv', file_name).group(1)
+    
+    print("----------------------------------------------------")
+    print("Processing: " + file_name)
+    print("----------------------------------------------------")
+    X = csv_file.iloc[:,:-1].values.astype(np.float64) 
+    y = csv_file.iloc[:,-1].values.astype(np.float64)
     
     try:
         categorical_variables = categorical_variables_per_dataset[dataset_name]
