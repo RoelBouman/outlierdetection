@@ -44,7 +44,7 @@ def preprocess_data(X,y):
     print(str(n_removed_duplicates) + " samples were removed due to being duplicates.")
     print("----------------------------------------------------")
     
-    variance_filter = get_variance_filter_index(X_unique, train_size_fraction*X_unique.shape[0])
+    variance_filter = get_variance_filter_index(X_unique, X_unique.shape[0])
     n_variables_filtered = np.count_nonzero(variance_filter==0)
     X_filtered = X_unique[:,variance_filter]
     for i, v in enumerate(variance_filter):
@@ -90,7 +90,6 @@ matfile_names = os.listdir(data_dir)
 HDFlist = ["http.mat", "smtp.mat"] #use MATLAB 7.3 file format (need HDF reader)
 black_list = ["ecoli.mat", "breastw.mat", "lympho.mat"] #ecoli is broken, lympho is removed due to being categorical, breastw has too many outliers %-wise, this is fixed in wbc
 
-train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
 json_meta_data_path = os.path.join(raw_dir, "ODDS_data_raw","categorical_variables_per_dataset.json")
 with open(json_meta_data_path, "r") as json_file:
@@ -242,7 +241,6 @@ csv_file_names = os.listdir(data_dir)
 
 black_list =  ["annthyroid", "letter", "satellite", "shuttle", "speech", "breast-cancer"]
 black_list = [f+"-unsupervised-ad.csv" for f in black_list]
-train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
 origin="Goldstein"
 
@@ -283,7 +281,6 @@ if not os.path.exists(target_dir):
 csv_file_names = os.listdir(data_dir)
 
 black_list = ["Annthyroid", "WDBC"] 
-train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
 origin = "GAAL"
 
@@ -328,8 +325,6 @@ arff_file_folders = os.listdir(data_dir)
 black_list = ["Annthyroid", "Arrhythmia", "Cardiotocography", "HeartDisease", "Pima", "SpamBase"] 
 original_file_list = ["Hepatitis_withoutdupl_norm_16.arff", "InternetAds_withoutdupl_norm_19.arff", "PageBlocks_withoutdupl_norm_09.arff", "Parkinson_withoutdupl_norm_75.arff", "Stamps_withoutdupl_norm_09.arff", "Wilt_withoutdupl_norm_05.arff"]
 
-train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
-
 origin = "ELKI"
 
 #%% Write Campos paper ARFF to pickles:
@@ -369,7 +364,6 @@ if not os.path.exists(target_dir):
 csv_file_names = os.listdir(data_dir)
 
 black_list = [] 
-train_size_fraction = 1 #can be set to between 0 and 1 in case of cross-validation
 
 origin = "ex-AE"
 
@@ -539,6 +533,52 @@ dataset_summaries.append(dataset_summary)
 target_file_name =  dataset_name + ".pickle"
 target_file_name_with_dir = os.path.join(target_dir, target_file_name)
 pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+
+#%% ADBENCH
+
+
+data_dir = os.path.join(raw_dir, "ADBench_data_raw")
+
+if not os.path.exists(target_dir):
+    os.mkdir(target_dir)
+
+csv_file_names = os.listdir(data_dir)
+
+black_list = [] 
+
+origin = "ADBench"
+
+
+for file_name in [f for f in os.listdir(data_dir) if f not in black_list]:
+    
+    full_path_filename = os.path.join(data_dir, file_name)
+    npz_file = np.load(full_path_filename)
+    
+    dataset_name = re.search('[1-9]+?_(.+?)\.npz', file_name).group(1)
+    
+    if dataset_name == "WBC":
+        dataset_name = "wbc2"
+    print("----------------------------------------------------")
+    print("Processing: " + file_name)
+    print("----------------------------------------------------")
+    X = npz_file["X"].astype(np.float64) 
+    y = npz_file["y"].astype(np.float64)
+    
+    try:
+        categorical_variables = categorical_variables_per_dataset[dataset_name]
+        print("some categorical variables")
+    except KeyError:
+        categorical_variables = []
+        print("no categorical variables")
+    
+    data_dict = preprocess_data(X, y)
+    
+    dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
+    dataset_summaries.append(dataset_summary)
+    
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
 #%% make summary into dataframe and write to latex
 
 #filter names:

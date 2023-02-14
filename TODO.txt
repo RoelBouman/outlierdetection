@@ -14,14 +14,16 @@ Online Detection of Rolling Bearings
 		- skin
 		- yeast
 		- WBC/WDBC (we have the 30D one), what about the other (9D)?
+		- donors
+		- fraud 
 	- https://github.com/GuansongPang/ADRepository-Anomaly-detection-datasets/tree/main/numerical%20data/DevNet%20datasets
 	all of these are from the DevNet paper
-		- donors
-		- backdoor
+		- donors #also in ADBENCH?
+		- backdoor #also in ADBENCH?
 		- bank
 		- celeba
 		- census
-		- fraud
+		- fraud #also in ADBENCH
 	- extended AE for novelty detection:
 		X https://www.kaggle.com/shrutimehta/nasa-asteroids-classification
 		X https://github.com/narayave/mh5_anomaly_detector UNUSABLE
@@ -35,11 +37,11 @@ Online Detection of Rolling Bearings
 		X VAE
 		X beta-VAE 
 		X DeepSVDD #not used in favor of LukasRuff version
-		- SO-GAAL
-		- MO-GAAL
+		X SO-GAAL
+		X MO-GAAL
 		- AnoGAN (too complex to get to work?)
 		X LUNAR
-		- ALAD
+		X ALAD
 	X DeepSVDD from LukasRUFF
 	- DAGMM: https://github.com/mperezcarrasco/PyTorch-DAGMM ( no easily adaptable implementations available)
 	- Non deep:
