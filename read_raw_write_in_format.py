@@ -590,7 +590,7 @@ summaries_df.set_index("Name", inplace=True)
 summaries_df.drop(["#numeric variables", "#categorical variables"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
 summaries_df.drop(filter_rows, inplace=True)
 summaries_df.rename(rename_rows, inplace=True)
-summaries_df.to_csv("tables/datasets_summaries.csv", index=False)
+summaries_df.to_csv("tables/datasets_summaries.csv", index=True)
 
 table_file = open("tables/datasets_table.tex","w")
 summaries_df.to_latex(table_file) 
