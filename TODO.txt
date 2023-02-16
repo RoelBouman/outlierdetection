@@ -1,30 +1,30 @@
 TODO:
 - Add datasets from :
-	- Emmot et al.: https://ir.library.oregonstate.edu/concern/datasets/47429f155?locale=en
-	- The Robust Multi-Scale Deep-SVDD Model for Anomaly
+	X Emmot et al.: https://ir.library.oregonstate.edu/concern/datasets/47429f155?locale=en #Covered in other sources
+	X The Robust Multi-Scale Deep-SVDD Model for Anomaly #non tabular
 Online Detection of Rolling Bearings
-	- An Ensembled Anomaly Detector for Wafer Fault Detection
-	- https://github.com/Minqi824/ADBench#datasets
-		- backdoor: https://research.unsw.edu.au/projects/unsw-nb15-dataset
+	X An Ensembled Anomaly Detector for Wafer Fault Detection #not tabular
+	x https://github.com/Minqi824/ADBench#datasets
+		# backdoor: https://research.unsw.edu.au/projects/unsw-nb15-dataset
 			- must cite 5 papers for dataset
 			- can't use entire dataset (too large), perhaps just use training set
-		- campaign:
-		- fault
-		- magic-gamma
-		- skin
-		- yeast
-		- WBC/WDBC (we have the 30D one), what about the other (9D)?
-		- donors
-		- fraud 
-	- https://github.com/GuansongPang/ADRepository-Anomaly-detection-datasets/tree/main/numerical%20data/DevNet%20datasets
+		X campaign:
+		X fault
+		X magic-gamma
+		X skin
+		X yeast
+		X WBC/WDBC (we have the 30D one), what about the other (9D)?
+		x donors
+		x fraud 
+	x https://github.com/GuansongPang/ADRepository-Anomaly-detection-datasets/tree/main/numerical%20data/DevNet%20datasets
 	all of these are from the DevNet paper
-		- donors #also in ADBENCH?
-		- backdoor #also in ADBENCH?
-		- bank
-		- celeba
-		- census
-		- fraud #also in ADBENCH
-	- extended AE for novelty detection:
+		x donors #also in ADBENCH?
+		x backdoor #also in ADBENCH?
+		x bank # same as campaign
+		x celeba
+		x census # too big
+		x fraud #also in ADBENCH
+	x extended AE for novelty detection:
 		X https://www.kaggle.com/shrutimehta/nasa-asteroids-classification
 		X https://github.com/narayave/mh5_anomaly_detector UNUSABLE
 		X https://www.kaggle.com/datasets/inIT-OWL/high-storage-system-data-for-energy-optimization TWO DATASETS

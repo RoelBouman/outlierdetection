@@ -556,6 +556,8 @@ for file_name in [f for f in os.listdir(data_dir) if f not in black_list]:
     
     if dataset_name == "WBC":
         dataset_name = "wbc2"
+    elif dataset_name == "WPBC":
+        dataset_name = "wpbc"
     print("----------------------------------------------------")
     print("Processing: " + file_name)
     print("----------------------------------------------------")

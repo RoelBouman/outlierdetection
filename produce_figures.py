@@ -9,7 +9,7 @@ import scipy.stats
 from scikit_posthocs import posthoc_nemenyi_friedman
 sns.set()
 
-prune = "methods"        
+prune = "datasets"        
 
 result_dir = "results/csvresult_dir"
 figure_dir = "figures"
@@ -20,9 +20,8 @@ os.makedirs(figure_dir, exist_ok=True)
 
 method_blacklist = []
 double_dataset_blacklist = [] 
-unsolvable_dataset_blacklist = ["speech", "vertebral", "hrss_anomalous_standard"]#, "speech_Goldstein"]
-own_dataset_blacklist = [] #own datasets for global/local verification
-dataset_blacklist = unsolvable_dataset_blacklist + own_dataset_blacklist + double_dataset_blacklist 
+unsolvable_dataset_blacklist = ["speech", "vertebral", "hrss_anomalous_standard"]
+dataset_blacklist = unsolvable_dataset_blacklist + double_dataset_blacklist 
 
 rename_datasets = {"hrss_anomalous_optimized":"hrss"}
 
