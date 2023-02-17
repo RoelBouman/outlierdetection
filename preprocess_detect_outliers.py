@@ -54,9 +54,16 @@ arg_parser = argparse.ArgumentParser(description='Run selected methods over all 
 arg_parser.add_argument('--method',
                        metavar='M',
                        dest='method',
-                       default='all',
+                       default='kNN',
                        type=str,
                        help='The method that you would like to run')
+
+arg_parser.add_argument('--dataset',
+                       metavar='D',
+                       dest='dataset',
+                       default="wine",
+                       type=str,
+                       help='The dataset you would like to run.')
 
 arg_parser.add_argument('--verbose',
                        metavar='V',
@@ -64,6 +71,13 @@ arg_parser.add_argument('--verbose',
                        default=1,
                        type=int,
                        help='The verbosity of the pipeline execution.')
+
+arg_parser.add_argument('--dry_run',
+                       metavar='R',
+                       dest='dry_run',
+                       default=False,
+                       type=bool,
+                       help='Whether to save results or not. NOT YET IMPLEMENTED')
 
 arg_parser.add_argument('--skip-CBLOF',
                        metavar='C',
@@ -78,6 +92,8 @@ parsed_args = arg_parser.parse_args()
 method_to_run = parsed_args.method
 verbose = parsed_args.verbose
 skip_CBLOF = parsed_args.skip_CBLOF
+include_datasets = parsed_args.dataset
+dry_run = parsed_args.dry_run
 
 #%% Define parameter settings and methods
 
@@ -218,6 +234,11 @@ else:
 if skip_CBLOF:
     all_methods_to_run.pop("CBLOF", False)
     all_methods_to_run.pop("u-CBLOF", False)
+    
+if include_datasets == "all":
+    pass        
+elif include_datasets+".pickle" in picklefile_names:
+    picklefile_names = [include_datasets+".pickle"]
 #%% loop over all data, but do not reproduce existing results
 
 

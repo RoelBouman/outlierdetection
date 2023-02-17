@@ -1,0 +1,12 @@
+get symlinks:
+
+mkdir -p /ceph/das-scratch/users/$USER/.cache
+mv ~/.cache/* /ceph/das-scratch/users/$USER/.cache/
+rm -r ~/.cache/
+ln -s /ceph/das-scratch/users/$USER/.cache ~/.cache
+
+
+mkdir -p /ceph/das-scratch/users/$USER/miniconda3
+mv ~/miniconda3/* /ceph/das-scratch/users/$USER/miniconda3
+rm -r ~/miniconda3
+ln -s /ceph/das-scratch/users/$USER/miniconda3 ~/miniconda3
