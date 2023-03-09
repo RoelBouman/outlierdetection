@@ -5,7 +5,7 @@ import gc
 from tensorflow.keras import backend as K
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, average_precision_score
 from pyod.utils.utility import precision_n_scores
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import RobustScaler
@@ -42,7 +42,7 @@ picklefile_names = [filename.replace(pickle_dir+os.path.sep,"") for filename in 
 score_functions = {"ROC/AUC": roc_auc_score, 
                    "R_precision": precision_n_scores, 
                    "adjusted_R_precision": adjusted_precision_n_scores, 
-                   "average_precision": average_precision, 
+                   "average_precision": average_precision_score, 
                    "adjusted_average_precision": adjusted_average_precision}
 
 
@@ -54,14 +54,14 @@ arg_parser = argparse.ArgumentParser(description='Run selected methods over all 
 arg_parser.add_argument('--method',
                        metavar='M',
                        dest='method',
-                       default='kNN',
+                       default='all',
                        type=str,
                        help='The method that you would like to run')
 
 arg_parser.add_argument('--dataset',
                        metavar='D',
                        dest='dataset',
-                       default="wine",
+                       default="yeast6",
                        type=str,
                        help='The dataset you would like to run.')
 
@@ -82,9 +82,9 @@ arg_parser.add_argument('--dry_run',
 arg_parser.add_argument('--skip-CBLOF',
                        metavar='C',
                        dest='skip_CBLOF',
-                       default=1,
+                       default=0,
                        type=int,
-                       help='Bool to skip CBLOF execution. When CBLOF has been calculated previously, redundant invalid clusterings will be calculated.')
+                       help='Bool to skip CBLOF execution during method = "all". When CBLOF has been calculated previously, redundant invalid clusterings will be calculated when this is set to 0 (False).')
 
 # Execute the parse_args() method
 parsed_args = arg_parser.parse_args()
@@ -231,7 +231,7 @@ else:
         raise KeyError("Specified method is not found in the list of available methods.")
 
 
-if skip_CBLOF:
+if skip_CBLOF and method_to_run == "all":
     all_methods_to_run.pop("CBLOF", False)
     all_methods_to_run.pop("u-CBLOF", False)
     

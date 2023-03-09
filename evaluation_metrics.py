@@ -1,6 +1,6 @@
 from pyod.utils.utility import get_label_n #precision_n_scores with n=None is equal to the R-precision measure
 from sklearn.utils import column_or_1d
-from sklearn.metrics import precision_score
+from sklearn.metrics import precision_score, average_precision_score
 import numpy as np
 
 #copied from pyod, but changed default behaviour of precision_score warnings when y_pred is all zeroes
@@ -47,20 +47,10 @@ def adjusted_precision_n_scores(y_true, y_pred, n=None):
     adjusted_p_at_n = (p_at_n - outliers_fraction)/(1 - outliers_fraction)
     
     return(adjusted_p_at_n)
-
-def average_precision(y_true, y_pred):
-    
-    n_outliers = np.count_nonzero(y_true)
-    
-    precision_sum = 0
-    for n in range(n_outliers):
-        precision_sum += precision_n_scores(y_true, y_pred, n)
-        
-    return(precision_sum/n_outliers)
     
 def adjusted_average_precision(y_true, y_pred):
     
-    ap = average_precision(y_true, y_pred)
+    ap = average_precision_score(y_true, y_pred)
     
     # calculate the percentage of outliers
     outliers_fraction = np.count_nonzero(y_true) / len(y_true)
