@@ -10,7 +10,7 @@ from pyod.utils.utility import precision_n_scores
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import RobustScaler
 from sklearn.model_selection import ParameterGrid
-from evaluation_metrics import adjusted_precision_n_scores, average_precision, adjusted_average_precision
+from evaluation_metrics import adjusted_precision_n_scores, adjusted_average_precision
 
 import shlex
 import subprocess
