@@ -625,14 +625,15 @@ for file_name in [f for f in os.listdir(data_dir) if f not in black_list]:
 #%% make summary into dataframe and write to latex
 
 #filter names:
-filter_rows = ["hrss_anomalous_standard", "speech", "vertebral"]
-rename_rows = {"hrss_anomalous_optimized":"hrss"}
+#filter_rows = ["hrss_anomalous_standard", "speech", "vertebral"]
+filter_rows = ["backdoor", "celeba", "fraud"]
+#rename_rows = {"hrss_anomalous_optimized":"hrss"}
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 summaries_df.set_index("Name", inplace=True)
 
 summaries_df.drop(["#numeric variables", "#categorical variables"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
 summaries_df.drop(filter_rows, inplace=True)
-summaries_df.rename(rename_rows, inplace=True)
+#summaries_df.rename(rename_rows, inplace=True)
 summaries_df.to_csv("tables/datasets_summaries.csv", index=True)
 
 table_file = open("tables/datasets_table.tex","w")
