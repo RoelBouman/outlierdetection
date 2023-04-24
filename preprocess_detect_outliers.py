@@ -18,7 +18,7 @@ import subprocess
 
 import argparse
 
-pickle_dir = "formatted_data"
+formatted_data_dir = "formatted_data"
 base_result_dir = "results"
 result_dir = "result_dir"
 csvresult_dir = "csvresult_dir"
@@ -28,15 +28,6 @@ preprocessed_data_dir = "preprocessed_data"
 DeepSVDD_dir = "additional_methods/Deep-SVDD"
 
 DeepSVDD_conda_env = "myenv"
-
-#picklefile_names = os.listdir(pickle_dir)
-
-#sort picklefile_names based on size: https://stackoverflow.com/questions/20252669/get-files-from-directory-argument-sorting-by-size
-# make a generator for all file paths within dirpath
-all_files = ( os.path.join(basedir, filename) for basedir, dirs, files in os.walk(pickle_dir) for filename in files   )
-sorted_files = sorted(all_files, key = os.path.getsize)
-picklefile_names = [filename.replace(pickle_dir+os.path.sep,"") for filename in sorted_files]
-
 
 #define score function:
 score_functions = {"ROC/AUC": roc_auc_score, 
@@ -61,7 +52,7 @@ arg_parser.add_argument('--method',
 arg_parser.add_argument('--dataset',
                        metavar='D',
                        dest='dataset',
-                       default="yeast6",
+                       default="all",
                        type=str,
                        help='The dataset you would like to run.')
 
@@ -71,6 +62,13 @@ arg_parser.add_argument('--verbose',
                        default=1,
                        type=int,
                        help='The verbosity of the pipeline execution.')
+
+arg_parser.add_argument('--input_type',
+                       metavar='I',
+                       dest='input_type',
+                       default="npz",
+                       type=str,
+                       help='The extension type of the processed data. Can be either "npz" or "pickle".')
 
 arg_parser.add_argument('--skip-CBLOF',
                        metavar='C',
@@ -86,7 +84,8 @@ method_to_run = parsed_args.method
 verbose = parsed_args.verbose
 skip_CBLOF = parsed_args.skip_CBLOF
 include_datasets = parsed_args.dataset
-dry_run = parsed_args.dry_run
+input_type = parsed_args.input_type
+
 
 #%% Define parameter settings and methods
 
@@ -199,6 +198,14 @@ method_parameters = {
         }
 
 #%% 
+#sort dataset_names based on size: https://stackoverflow.com/questions/20252669/get-files-from-directory-argument-sorting-by-size
+# make a generator for all file paths within dirpath
+all_files = ( os.path.join(basedir, filename) for basedir, dirs, files in os.walk(formatted_data_dir) for filename in files   )
+sorted_files = sorted(all_files, key = os.path.getsize)
+dataset_names = [filename.replace(formatted_data_dir+os.path.sep,"") for filename in sorted_files]
+dataset_names = [dataset_name for dataset_name in dataset_names if dataset_name.endswith(input_type)]
+
+#%%
 if method_to_run == "all":
     all_methods_to_run = method_classes
 else:
@@ -214,8 +221,8 @@ if skip_CBLOF and method_to_run == "all":
     
 if include_datasets == "all":
     pass        
-elif include_datasets+".pickle" in picklefile_names:
-    picklefile_names = [include_datasets+".pickle"]
+elif include_datasets+"."+input_type in dataset_names:
+    dataset_names = [include_datasets+"."+input_type]
 #%% loop over all data, but do not reproduce existing results
 
 
@@ -226,20 +233,22 @@ score_csvdir = os.path.join(base_result_dir, score_dir)
 if not os.path.exists(score_csvdir):
     os.makedirs(score_csvdir)
     
-for picklefile_name in picklefile_names:
+for dataset_name in dataset_names:
     
     #check if data path exists, and make it if it doesn't
 
     
     #print name for reporting purpose
-    print("______"+picklefile_name+"______")
+    print("______"+dataset_name+"______")
     
-    full_path_filename = os.path.join(pickle_dir, picklefile_name)
+    full_path_filename = os.path.join(formatted_data_dir, dataset_name)
     
-    data = pickle.load(open(full_path_filename, 'rb'))
-    X, y = data["X"], np.squeeze(data["y"])
+    if input_type == "pickle":
+        data = pickle.load(open(full_path_filename, 'rb'))
+    elif input_type == "npz":
+        data = data = np.load(open(full_path_filename, 'rb'))
                     
-    
+    X, y = data["X"], np.squeeze(data["y"])
     
     #loop over all methods:
 
@@ -260,8 +269,8 @@ for picklefile_name in picklefile_names:
                 print(hyperparameter_string)
             
             #check whether results have  been calculated
-            full_target_dir = os.path.join(target_dir, picklefile_name.replace(".pickle", ""), method_name)
-            target_file_name = os.path.join(target_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".pickle")
+            full_target_dir = os.path.join(target_dir, dataset_name.replace("."+input_type, ""), method_name)
+            target_file_name = os.path.join(target_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+"."+input_type)
             if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
                 if verbose:
                     print(" results already calculated, skipping recalculation")
@@ -277,7 +286,7 @@ for picklefile_name in picklefile_names:
                 #instead: call deepsvdd script from command line with arguments parsed from variables (also needed for custom Conda env)
                 if method_name in ["DeepSVDD", "sb-DeepSVDD"]:
                     
-                    preprocessed_data_file_name = os.path.join(DeepSVDD_dir, "data", picklefile_name)
+                    preprocessed_data_file_name = os.path.join(DeepSVDD_dir, "data", dataset_name)
                     #preprocess data and write to csv:
                     
                     #check if preprocessed data already exists:, if not preprocess and write data
@@ -297,16 +306,16 @@ for picklefile_name in picklefile_names:
                     DeepSVDD_argument_list.append("python")
                     DeepSVDD_argument_list.append(os.path.join(DeepSVDD_dir,"src", "main.py"))
                     
-                    DeepSVDD_argument_list.append(picklefile_name)
+                    DeepSVDD_argument_list.append(dataset_name)
                     
                     DeepSVDD_argument_list.append(str(hyperparameter_setting["n_layers"]))
                     DeepSVDD_argument_list.append(str(hyperparameter_setting["shrinkage_factor"]))
                     
-                    DeepSVDD_argument_list.append(os.path.join("..", "log", picklefile_name))
+                    DeepSVDD_argument_list.append(os.path.join("..", "log", dataset_name))
                     DeepSVDD_argument_list.append(os.path.join(DeepSVDD_dir, "data"))
                     
                     #csv scores
-                    full_target_scoredir = os.path.join(score_csvdir, picklefile_name.replace(".pickle", ""), method_name)
+                    full_target_scoredir = os.path.join(score_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_scoredir, exist_ok=True)
                     csv_filename = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
                     DeepSVDD_argument_list.append(csv_filename) #csv
@@ -337,7 +346,7 @@ for picklefile_name in picklefile_names:
                         pickle.dump(method_performance_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
                     
                     #also write csv files for easy manual inspection of metrics
-                    full_target_csvdir = os.path.join(target_csvdir, picklefile_name.replace(".pickle", ""), method_name)
+                    full_target_csvdir = os.path.join(target_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_csvdir, exist_ok=True)
                     target_csvfile_name = os.path.join(full_target_csvdir, hyperparameter_string+".csv")
                     method_performance_df.to_csv(target_csvfile_name)
@@ -383,12 +392,12 @@ for picklefile_name in picklefile_names:
                         pickle.dump(method_performance_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
                     
                     #also write csv files for easy manual inspection
-                    full_target_csvdir = os.path.join(target_csvdir, picklefile_name.replace(".pickle", ""), method_name)
+                    full_target_csvdir = os.path.join(target_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_csvdir, exist_ok=True)
                     target_csvfile_name = os.path.join(full_target_csvdir, hyperparameter_string+".csv")
                     method_performance_df.to_csv(target_csvfile_name)
                     
-                    full_target_scoredir = os.path.join(score_csvdir, picklefile_name.replace(".pickle", ""), method_name)
+                    full_target_scoredir = os.path.join(score_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_scoredir, exist_ok=True)
                     target_scorefile_name = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
                     np.savetxt(target_scorefile_name, outlier_scores)
@@ -403,15 +412,15 @@ for picklefile_name in picklefile_names:
                             history = pipeline[1].history_
                             history_df = pd.DataFrame(history)
                         
-                        full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
-                        target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".pickle")
+                        full_target_dir = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name)
+                        target_file_name = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+"."+input_type)
                         
                         os.makedirs(full_target_dir, exist_ok=True)
                         with open(target_file_name, 'wb') as handle:
                             pickle.dump(history_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
                             
-                        full_target_dir = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name)
-                        target_file_name = os.path.join(log_dir, picklefile_name.replace(".pickle", ""), method_name, hyperparameter_string+".csv")
+                        full_target_dir = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name)
+                        target_file_name = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+".csv")
                         
                         os.makedirs(full_target_dir, exist_ok=True)
     
