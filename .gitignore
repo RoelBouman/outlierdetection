@@ -1,7 +1,9 @@
 raw_data/
 results/
-results_backup/
+results_temp/
 logs/
+formatted_data_old/
+
 
 
 *.pyc
