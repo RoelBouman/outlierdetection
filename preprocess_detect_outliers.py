@@ -72,13 +72,6 @@ arg_parser.add_argument('--verbose',
                        type=int,
                        help='The verbosity of the pipeline execution.')
 
-arg_parser.add_argument('--dry_run',
-                       metavar='R',
-                       dest='dry_run',
-                       default=False,
-                       type=bool,
-                       help='Whether to save results or not. NOT YET IMPLEMENTED')
-
 arg_parser.add_argument('--skip-CBLOF',
                        metavar='C',
                        dest='skip_CBLOF',
@@ -97,7 +90,6 @@ dry_run = parsed_args.dry_run
 
 #%% Define parameter settings and methods
 
-#from pyod.models.rgraph import RGraph
 from pyod.models.inne import INNE
 from pyod.models.kde import KDE
 from pyod.models.gmm import GMM
@@ -111,7 +103,6 @@ from pyod.models.knn import KNN
 from pyod.models.lmdd import LMDD
 from pyod.models.loda import LODA
 from pyod.models.lof import LOF
-#from pyod.models.loci import LOCI #LOCI is horrendously slow. (O(n3)), aLOCI might be a decent approach, but are there implementations?
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
@@ -120,7 +111,6 @@ from pyod.models.ecod import ECOD
 from pyod.models.lunar import LUNAR
 from pyod.models.so_gaal import SO_GAAL
 from pyod.models.mo_gaal import MO_GAAL
-#from pyod.models.sos import SOS #SOS also has memory allocation issues.
 from pyod.models.combination import maximization
 
 from additional_methods.ensemble import  Ensemble
@@ -131,7 +121,6 @@ from additional_methods.SVDD.src.BaseSVDD import BaseSVDD
 
 from additional_methods.wrappers.AE import AE_wrapper
 from additional_methods.wrappers.VAE import VAE_wrapper
-#from additional_methods.wrappers.AnoGAN import AnoGAN_wrapper
 from additional_methods.wrappers.rrcf import rrcf_wrapper
 from additional_methods.wrappers.ALAD import ALAD_wrapper
 
@@ -139,8 +128,6 @@ ensemble_LOF_krange = range(5,31)
 
 #dict of methods and functions
 method_classes = {
-        #"KPCA":KPCA,
-        #"RGraph":RGraph,
         "INNE":INNE,
         "GMM":GMM,
         "KDE":KDE,
@@ -169,20 +156,14 @@ method_classes = {
         "VAE":VAE_wrapper,
         "beta-VAE":VAE_wrapper,
         "LUNAR":LUNAR,
-        #"AnoGAN":AnoGAN_wrapper
         "DeepSVDD":[],#empty, because no sklearn object, but rather hardcoded script
         "sb-DeepSVDD":[],
-        #"SVDD":BaseSVDD,
-        #"RRCF":rrcf_wrapper,
         "ALAD":ALAD_wrapper,
         "SO-GAAL":SO_GAAL,
-        #"MO-GAAL":MO_GAAL
         }
 
 #dict of methods and parameters
 method_parameters = {
-        #"KPCA":{},
-        #"RGraph":{"gamma":[5,50,200,350,500], "algorithm":["lasso_cd"]}, #use lasso_cd due to convergence issues
         "INNE":{},
         "GMM":{"n_components":range(2,15)},
         "KDE":{},
@@ -210,15 +191,11 @@ method_parameters = {
         "AE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "beta-VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "gamma":[10,20,50], "verbose":[0]},
-        #"AnoGAN":{"D_n_layers":[3], "D_shrinkage_factor":[0.3,0.5], "G_n_layers":[3], "G_shrinkage_factor":[0.3,0.5],  "verbose":[0], "epochs":[200]},
         "LUNAR":{"n_neighbours":[5, 10, 15, 20, 25 ,30]}, #parameter is inconsistently named n_neighbours 
         "DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
         "sb-DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
-        #"SVDD":{},
-        #"RRCF":{"n_trees":[1000], "tree_size":[128,256,512,1024]}, #minimum n_trees, when tree_size*n_trees < n_samples, more trees are used.
         "ALAD":{"n_layers":[3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "output_activation":["linear"], "verbose":[0]},
-        "SO-GAAL":{"stop_epochs":[50]},
-        #"MO-GAAL":{"stop_epochs":[50]}
+        "SO-GAAL":{"stop_epochs":[50]}
         }
 
 #%% 
