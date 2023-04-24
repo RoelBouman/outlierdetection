@@ -199,34 +199,34 @@ pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
 #%% Yeast data is commented out due to being undocumented/unsolvable (see other comparison papers)
 # .data/csv files
 
-# file_name = "yeast.data"
-# print("----------------------------------------------------")
-# print("Processing: " + file_name)
-# print("----------------------------------------------------")
-# yeast = pd.read_csv(os.path.join(nonmat_data_dir, file_name), delim_whitespace=True, header=None)
-# #Cyt
+file_name = "yeast.data"
+print("----------------------------------------------------")
+print("Processing: " + file_name)
+print("----------------------------------------------------")
+yeast = pd.read_csv(os.path.join(nonmat_data_dir, file_name), delim_whitespace=True, header=None)
+#Cyt
 
-# X = yeast.iloc[:,1:9].values.astype(np.float64)
-# y = pd.get_dummies(yeast.iloc[:,9])[["CYT", "NUC", "MIT", "ME3"]].sum(axis=1).values.astype(np.float64)
+X = yeast.iloc[:,1:9].values.astype(np.float64)
+y = pd.get_dummies(yeast.iloc[:,9])[["EXC"]].sum(axis=1).values.astype(np.float64)
 
-# dataset_name = re.search('(.+?)\.data', file_name).group(1)
+dataset_name = "yeast6"
 
-# try:
-#     categorical_variables = categorical_variables_per_dataset[dataset_name]
-#     print("some categorical variables")
-# except KeyError:
-#     categorical_variables = []
-#     print("no categorical variables")
+try:
+    categorical_variables = categorical_variables_per_dataset[dataset_name]
+    print("some categorical variables")
+except KeyError:
+    categorical_variables = []
+    print("no categorical variables")
 
-# data_dict = preprocess_data(X, y)
+data_dict = preprocess_data(X, y)
 
-# dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables)
-# dataset_summaries.append(dataset_summary)
+dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin="EOAD")
+dataset_summaries.append(dataset_summary)
 
 
-# target_file_name = re.search('(.+?)\.data', file_name).group(1) + ".pickle"
-# target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-# pickle.dump(data_dict, open(target_file_name_with_dir, "wb")) 
+target_file_name = dataset_name+ ".pickle"
+target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+pickle.dump(data_dict, open(target_file_name_with_dir, "wb")) 
 
 
 #%% Goldstein CSV data
@@ -625,14 +625,15 @@ for file_name in [f for f in os.listdir(data_dir) if f not in black_list]:
 #%% make summary into dataframe and write to latex
 
 #filter names:
-filter_rows = ["hrss_anomalous_standard", "speech", "vertebral"]
-rename_rows = {"hrss_anomalous_optimized":"hrss"}
+#filter_rows = ["hrss_anomalous_standard", "speech", "vertebral"]
+filter_rows = ["backdoor", "celeba", "fraud"]
+#rename_rows = {"hrss_anomalous_optimized":"hrss"}
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 summaries_df.set_index("Name", inplace=True)
 
 summaries_df.drop(["#numeric variables", "#categorical variables"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
 summaries_df.drop(filter_rows, inplace=True)
-summaries_df.rename(rename_rows, inplace=True)
+#summaries_df.rename(rename_rows, inplace=True)
 summaries_df.to_csv("tables/datasets_summaries.csv", index=True)
 
 table_file = open("tables/datasets_table.tex","w")

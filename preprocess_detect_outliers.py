@@ -5,12 +5,12 @@ import gc
 from tensorflow.keras import backend as K
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, average_precision_score
 from pyod.utils.utility import precision_n_scores
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import RobustScaler
 from sklearn.model_selection import ParameterGrid
-from evaluation_metrics import adjusted_precision_n_scores, average_precision, adjusted_average_precision
+from evaluation_metrics import adjusted_precision_n_scores, adjusted_average_precision
 
 import shlex
 import subprocess
@@ -42,7 +42,7 @@ picklefile_names = [filename.replace(pickle_dir+os.path.sep,"") for filename in 
 score_functions = {"ROC/AUC": roc_auc_score, 
                    "R_precision": precision_n_scores, 
                    "adjusted_R_precision": adjusted_precision_n_scores, 
-                   "average_precision": average_precision, 
+                   "average_precision": average_precision_score, 
                    "adjusted_average_precision": adjusted_average_precision}
 
 
@@ -58,6 +58,13 @@ arg_parser.add_argument('--method',
                        type=str,
                        help='The method that you would like to run')
 
+arg_parser.add_argument('--dataset',
+                       metavar='D',
+                       dest='dataset',
+                       default="yeast6",
+                       type=str,
+                       help='The dataset you would like to run.')
+
 arg_parser.add_argument('--verbose',
                        metavar='V',
                        dest='verbose',
@@ -68,9 +75,9 @@ arg_parser.add_argument('--verbose',
 arg_parser.add_argument('--skip-CBLOF',
                        metavar='C',
                        dest='skip_CBLOF',
-                       default=1,
+                       default=0,
                        type=int,
-                       help='Bool to skip CBLOF execution. When CBLOF has been calculated previously, redundant invalid clusterings will be calculated.')
+                       help='Bool to skip CBLOF execution during method = "all". When CBLOF has been calculated previously, redundant invalid clusterings will be calculated when this is set to 0 (False).')
 
 # Execute the parse_args() method
 parsed_args = arg_parser.parse_args()
@@ -78,10 +85,11 @@ parsed_args = arg_parser.parse_args()
 method_to_run = parsed_args.method
 verbose = parsed_args.verbose
 skip_CBLOF = parsed_args.skip_CBLOF
+include_datasets = parsed_args.dataset
+dry_run = parsed_args.dry_run
 
 #%% Define parameter settings and methods
 
-#from pyod.models.rgraph import RGraph
 from pyod.models.inne import INNE
 from pyod.models.kde import KDE
 from pyod.models.gmm import GMM
@@ -95,7 +103,6 @@ from pyod.models.knn import KNN
 from pyod.models.lmdd import LMDD
 from pyod.models.loda import LODA
 from pyod.models.lof import LOF
-#from pyod.models.loci import LOCI #LOCI is horrendously slow. (O(n3)), aLOCI might be a decent approach, but are there implementations?
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
@@ -104,7 +111,6 @@ from pyod.models.ecod import ECOD
 from pyod.models.lunar import LUNAR
 from pyod.models.so_gaal import SO_GAAL
 from pyod.models.mo_gaal import MO_GAAL
-#from pyod.models.sos import SOS #SOS also has memory allocation issues.
 from pyod.models.combination import maximization
 
 from additional_methods.ensemble import  Ensemble
@@ -115,7 +121,6 @@ from additional_methods.SVDD.src.BaseSVDD import BaseSVDD
 
 from additional_methods.wrappers.AE import AE_wrapper
 from additional_methods.wrappers.VAE import VAE_wrapper
-#from additional_methods.wrappers.AnoGAN import AnoGAN_wrapper
 from additional_methods.wrappers.rrcf import rrcf_wrapper
 from additional_methods.wrappers.ALAD import ALAD_wrapper
 
@@ -123,8 +128,6 @@ ensemble_LOF_krange = range(5,31)
 
 #dict of methods and functions
 method_classes = {
-        #"KPCA":KPCA,
-        #"RGraph":RGraph,
         "INNE":INNE,
         "GMM":GMM,
         "KDE":KDE,
@@ -153,20 +156,14 @@ method_classes = {
         "VAE":VAE_wrapper,
         "beta-VAE":VAE_wrapper,
         "LUNAR":LUNAR,
-        #"AnoGAN":AnoGAN_wrapper
         "DeepSVDD":[],#empty, because no sklearn object, but rather hardcoded script
         "sb-DeepSVDD":[],
-        #"SVDD":BaseSVDD,
-        #"RRCF":rrcf_wrapper,
         "ALAD":ALAD_wrapper,
         "SO-GAAL":SO_GAAL,
-        #"MO-GAAL":MO_GAAL
         }
 
 #dict of methods and parameters
 method_parameters = {
-        #"KPCA":{},
-        #"RGraph":{"gamma":[5,50,200,350,500], "algorithm":["lasso_cd"]}, #use lasso_cd due to convergence issues
         "INNE":{},
         "GMM":{"n_components":range(2,15)},
         "KDE":{},
@@ -194,15 +191,11 @@ method_parameters = {
         "AE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "beta-VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "gamma":[10,20,50], "verbose":[0]},
-        #"AnoGAN":{"D_n_layers":[3], "D_shrinkage_factor":[0.3,0.5], "G_n_layers":[3], "G_shrinkage_factor":[0.3,0.5],  "verbose":[0], "epochs":[200]},
         "LUNAR":{"n_neighbours":[5, 10, 15, 20, 25 ,30]}, #parameter is inconsistently named n_neighbours 
         "DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
         "sb-DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
-        #"SVDD":{},
-        #"RRCF":{"n_trees":[1000], "tree_size":[128,256,512,1024]}, #minimum n_trees, when tree_size*n_trees < n_samples, more trees are used.
         "ALAD":{"n_layers":[3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "output_activation":["linear"], "verbose":[0]},
-        "SO-GAAL":{"stop_epochs":[50]},
-        #"MO-GAAL":{"stop_epochs":[50]}
+        "SO-GAAL":{"stop_epochs":[50]}
         }
 
 #%% 
@@ -215,9 +208,14 @@ else:
         raise KeyError("Specified method is not found in the list of available methods.")
 
 
-if skip_CBLOF:
+if skip_CBLOF and method_to_run == "all":
     all_methods_to_run.pop("CBLOF", False)
     all_methods_to_run.pop("u-CBLOF", False)
+    
+if include_datasets == "all":
+    pass        
+elif include_datasets+".pickle" in picklefile_names:
+    picklefile_names = [include_datasets+".pickle"]
 #%% loop over all data, but do not reproduce existing results
 
 

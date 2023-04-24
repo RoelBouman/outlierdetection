@@ -1,4 +1,3 @@
-formatted_data/
 raw_data/
 results/
 results_backup/
@@ -8,6 +7,7 @@ logs/
 *.pyc
 *.log
 *.tex
+*.pickle
 
 additional_methods/Deep-SVDD/log/mnist_test/
 

@@ -9,7 +9,7 @@ import scipy.stats
 from scikit_posthocs import posthoc_nemenyi_friedman
 sns.set()
 
-prune = "datasets"        
+prune = "methods"        
 
 result_dir = "results/csvresult_dir"
 figure_dir = "figures"
@@ -19,9 +19,10 @@ os.makedirs(table_dir, exist_ok=True)
 os.makedirs(figure_dir, exist_ok=True)
 
 method_blacklist = []
+large_dataset_blacklist = ["celeba", "backdoor", "fraud"]
 double_dataset_blacklist = [] 
-unsolvable_dataset_blacklist = ["speech", "vertebral", "hrss_anomalous_standard"]
-dataset_blacklist = unsolvable_dataset_blacklist + double_dataset_blacklist 
+unsolvable_dataset_blacklist = ["hrss_anomalous_standard", "wpbc", "yeast"]
+dataset_blacklist = large_dataset_blacklist + unsolvable_dataset_blacklist + double_dataset_blacklist 
 
 rename_datasets = {"hrss_anomalous_optimized":"hrss"}
 
@@ -52,7 +53,7 @@ def iman_davenport_critical_value(rank_df):
 #%%
 
 #First find all datasets and methods used:
-datasets = os.listdir(result_dir)
+datasets = set(os.listdir(result_dir)) - set(dataset_blacklist)
     
 methods_per_dataset = []
 
@@ -61,9 +62,11 @@ max_methods = 0
 for dataset in datasets:
     method_folders = os.listdir(os.path.join(result_dir, dataset))
     
-    methods_per_dataset.append(set(method_folders))
+    unique_datasets = set(method_folders)-set(method_blacklist)
     
-    method_count_per_dataset[dataset] = len(method_folders)
+    methods_per_dataset.append(unique_datasets)
+    
+    method_count_per_dataset[dataset] = len(unique_datasets)
     
     if method_count_per_dataset[dataset] > max_methods:
         max_methods = method_count_per_dataset[dataset]
@@ -134,8 +137,8 @@ for dataset_name in datasets:
 
         
 for evaluation_metric in evaluation_metrics:
-    metric_dfs[evaluation_metric].drop(method_blacklist, axis=0, inplace=True, errors="ignore")
-    metric_dfs[evaluation_metric].drop(dataset_blacklist,axis=1,inplace=True, errors="ignore")
+    #metric_dfs[evaluation_metric].drop(method_blacklist, axis=0, inplace=True, errors="ignore")
+    #metric_dfs[evaluation_metric].drop(dataset_blacklist,axis=1,inplace=True, errors="ignore")
         
     if prune == "methods":
         metric_dfs[evaluation_metric].dropna(axis=0, inplace=True)#drop columns first, as datasets are processed in inner loop, methods in outer..
@@ -148,6 +151,29 @@ for evaluation_metric in evaluation_metrics:
     metric_dfs[evaluation_metric].rename(columns=rename_datasets, inplace=True)
 
     
+
+#%% see whether datasets are "solvable", and whether they might need to be inverted:
+temp_df = metric_dfs["ROC/AUC"]
+
+low_max_datasets= temp_df.columns[temp_df.max() < 0.6]
+
+invertable_datasets = temp_df.columns[np.logical_and(temp_df.max() < 0.6, temp_df.min() < 0.4)]
+#list minima:
+print("invertable datasets:")
+print(invertable_datasets)
+print("minima:")
+print(temp_df.min().loc[invertable_datasets])
+print("maxima:")
+print(temp_df.max().loc[invertable_datasets])
+
+unsolvable_datasets = temp_df.columns[np.logical_and(temp_df.max() < 0.6, temp_df.min() >= 0.4)]
+
+print("Unsolvable datasets:")
+print(unsolvable_datasets)
+print("minima:")
+print(temp_df.min().loc[unsolvable_datasets])
+print("maxima:")
+print(temp_df.max().loc[unsolvable_datasets])
 #%% calculate friedman  nemenyi and write to table
 #TODO: Calculate Friedman using Tom's exact implementation
 
@@ -312,7 +338,7 @@ table_file.close()
 
 #%% Local datasets
 
-local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "glass", "ionosphere", "nasa"]
+local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "glass", "ionosphere", "nasa", "fault", "landsat", "donors"]
 
 #check if all local datasets have been calculated/are not in blacklist:
 local_datasets = [dataset for dataset in local_datasets if dataset in metric_dfs["ROC/AUC"].columns]
