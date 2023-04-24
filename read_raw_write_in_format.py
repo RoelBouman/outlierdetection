@@ -19,6 +19,9 @@ import json
 raw_dir = "raw_data"
 target_dir = "formatted_data"
 
+#output format can be either pickle or npz
+output_format = "npz" 
+
 
 if not os.path.exists(target_dir):
     os.mkdir(target_dir)
@@ -124,9 +127,14 @@ for file_name in [f for f in matfile_names if f not in HDFlist and f not in blac
     dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     dataset_summaries.append(dataset_summary)
     
-    target_file_name =  dataset_name + ".pickle"
-    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    if output_format == "pickle":
+        target_file_name =  dataset_name + ".pickle"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    elif output_format == "npz":
+        target_file_name =  dataset_name + ".npz"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
 #%%
 # HDF mat files
     
@@ -154,9 +162,14 @@ for file_name in HDFlist:
     dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     dataset_summaries.append(dataset_summary)
     
-    target_file_name =  dataset_name + ".pickle"
-    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    if output_format == "pickle":
+        target_file_name =  dataset_name + ".pickle"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    elif output_format == "npz":
+        target_file_name =  dataset_name + ".npz"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
     
 #%%
 #arff files
@@ -192,9 +205,14 @@ data_dict = preprocess_data(X, y)
 dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
 dataset_summaries.append(dataset_summary)
 
-target_file_name = re.search('(.+?)\.arff', file_name).group(1) + ".pickle"
-target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-pickle.dump(data_dict, open(target_file_name_with_dir, "wb")) 
+if output_format == "pickle":
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+elif output_format == "npz":
+    target_file_name =  dataset_name + ".npz"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
 
 #%% Yeast data is commented out due to being undocumented/unsolvable (see other comparison papers)
 # .data/csv files
@@ -224,9 +242,14 @@ dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_vari
 dataset_summaries.append(dataset_summary)
 
 
-target_file_name = dataset_name+ ".pickle"
-target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-pickle.dump(data_dict, open(target_file_name_with_dir, "wb")) 
+if output_format == "pickle":
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+elif output_format == "npz":
+    target_file_name =  dataset_name + ".npz"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
 
 
 #%% Goldstein CSV data
@@ -266,9 +289,14 @@ for file_name in [f for f in csv_file_names if f not in black_list]:
     dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     dataset_summaries.append(dataset_summary)
     
-    target_file_name =  dataset_name + ".pickle"
-    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))   
+    if output_format == "pickle":
+        target_file_name =  dataset_name + ".pickle"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    elif output_format == "npz":
+        target_file_name =  dataset_name + ".npz"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
 
 #%% GAAL CSV data
 
@@ -306,9 +334,14 @@ for file_name in [f for f in csv_file_names if f not in black_list]:
     dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     dataset_summaries.append(dataset_summary)
     
-    target_file_name =  dataset_name + ".pickle"
-    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))  
+    if output_format == "pickle":
+        target_file_name =  dataset_name + ".pickle"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    elif output_format == "npz":
+        target_file_name =  dataset_name + ".npz"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
 
 
 
@@ -350,9 +383,14 @@ for file_folder, file_name in zip(sorted([f for f in arff_file_folders if f not 
     dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     dataset_summaries.append(dataset_summary)
     
-    target_file_name =  dataset_name + ".pickle"
-    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))  
+    if output_format == "pickle":
+        target_file_name =  dataset_name + ".pickle"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    elif output_format == "npz":
+        target_file_name =  dataset_name + ".npz"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
 
 #%% write extended AE:
 
@@ -390,9 +428,14 @@ data_dict = preprocess_data(X, y)
 dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
 dataset_summaries.append(dataset_summary)
 
-target_file_name =  dataset_name + ".pickle"
-target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+if output_format == "pickle":
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+elif output_format == "npz":
+    target_file_name =  dataset_name + ".npz"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
             
 #%% https://www.kaggle.com/datasets/inIT-OWL/high-storage-system-data-for-energy-optimization
 
@@ -416,9 +459,14 @@ data_dict = preprocess_data(X, y)
 dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
 dataset_summaries.append(dataset_summary)
 
-target_file_name =  dataset_name + ".pickle"
-target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+if output_format == "pickle":
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+elif output_format == "npz":
+    target_file_name =  dataset_name + ".npz"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
 
 file_name = "HRSS_anomalous_standard.csv"
 
@@ -440,9 +488,14 @@ data_dict = preprocess_data(X, y)
 dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
 dataset_summaries.append(dataset_summary)
 
-target_file_name =  dataset_name + ".pickle"
-target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+if output_format == "pickle":
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+elif output_format == "npz":
+    target_file_name =  dataset_name + ".npz"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
 
 #%% MI-F/V
 CNC_file_folder = "CNC-kaggle"
@@ -488,9 +541,14 @@ data_dict = preprocess_data(X, y)
 dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
 dataset_summaries.append(dataset_summary)
 
-target_file_name =  dataset_name + ".pickle"
-target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+if output_format == "pickle":
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+elif output_format == "npz":
+    target_file_name =  dataset_name + ".npz"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
 
 #%% MI-V
 file_name = "MI-V.csv"
@@ -530,9 +588,14 @@ data_dict = preprocess_data(X, y)
 dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
 dataset_summaries.append(dataset_summary)
 
-target_file_name =  dataset_name + ".pickle"
-target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))
+if output_format == "pickle":
+    target_file_name =  dataset_name + ".pickle"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+elif output_format == "npz":
+    target_file_name =  dataset_name + ".npz"
+    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+    np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
 
 #%% ADBENCH
 data_dir = os.path.join(raw_dir, "ADBench_data_raw")
@@ -576,9 +639,14 @@ for file_name in [f for f in os.listdir(data_dir) if f not in black_list]:
     dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     dataset_summaries.append(dataset_summary)
     
-    target_file_name =  dataset_name + ".pickle"
-    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    if output_format == "pickle":
+        target_file_name =  dataset_name + ".pickle"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    elif output_format == "npz":
+        target_file_name =  dataset_name + ".npz"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        np.savez(open(target_file_name_with_dir, "wb"), **data_dict)     
     
 #%% ADRepository
 
@@ -619,20 +687,25 @@ for file_name in [f for f in os.listdir(data_dir) if f not in black_list]:
     dataset_summary = make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     dataset_summaries.append(dataset_summary)
     
-    target_file_name =  dataset_name + ".pickle"
-    target_file_name_with_dir = os.path.join(target_dir, target_file_name)
-    pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    if output_format == "pickle":
+        target_file_name =  dataset_name + ".pickle"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        pickle.dump(data_dict, open(target_file_name_with_dir, "wb"))    
+    elif output_format == "npz":
+        target_file_name =  dataset_name + ".npz"
+        target_file_name_with_dir = os.path.join(target_dir, target_file_name)
+        np.savez(open(target_file_name_with_dir, "wb"), **data_dict)    
 #%% make summary into dataframe and write to latex
 
 #filter names:
 #filter_rows = ["hrss_anomalous_standard", "speech", "vertebral"]
-filter_rows = ["backdoor", "celeba", "fraud"]
+#filter_rows = ["backdoor", "celeba", "fraud"]
 #rename_rows = {"hrss_anomalous_optimized":"hrss"}
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 summaries_df.set_index("Name", inplace=True)
 
 summaries_df.drop(["#numeric variables", "#categorical variables"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
-summaries_df.drop(filter_rows, inplace=True)
+#summaries_df.drop(filter_rows, inplace=True)
 #summaries_df.rename(rename_rows, inplace=True)
 summaries_df.to_csv("tables/datasets_summaries.csv", index=True)
 
