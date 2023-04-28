@@ -8,11 +8,6 @@ You can cite our paper as follows:
 insert Arxiv bibtex citation
 ```
 
-
-##  Getting started with this benchmark
-
-
-
 ## Running the full benchmark
 In order to run the full benchmark, you will need to install all dependencies. The easiest way to do this is through the supplied .yml file through an Anaconda environment.
 ```
@@ -82,6 +77,15 @@ python3 produce_figures.py
 
 ## Extending the benchmark
 Extending the benchmark is easy!
+You'll not need to install all dependencies for this, but a minimal set will do:
+```
+conda env create -f minimal_environment.yml
+```
+
+Then, activate the environment:
+```
+conda activate OD_benchmark_minimal
+```
 
 ### Adding datasets
 Datasets can be added by ensuring processed datafiles are added to `processed_data` folder in either `.npz` or `.pickle` format. You can look at the `read_raw_write_in_format.py` script for inspiration. Most importantly, data can't contain duplicates, and must include the following attributes: `X` with samples as rows and features as columns, `y`, 1-dimensional with a label `0` for each normal sample, and `1` for each anomaly.
