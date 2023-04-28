@@ -1,0 +1,13 @@
+name: OD_benchmark_minimal
+dependencies:
+  - python=3.8
+  - numpy
+  - pandas
+  - scikit-learn=1.0.2
+  - matplotlib
+  - seaborn
+  - scipy
+  - pip
+  - pip:
+    - pyod
+    - combo
