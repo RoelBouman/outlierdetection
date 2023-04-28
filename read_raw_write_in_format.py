@@ -91,7 +91,7 @@ nonmat_data_dir = os.path.join(raw_dir, "ODDS_data_raw", "other_data")
 matfile_names = os.listdir(data_dir)
 
 HDFlist = ["http.mat", "smtp.mat"] #use MATLAB 7.3 file format (need HDF reader)
-black_list = ["ecoli.mat", "breastw.mat", "lympho.mat"] #ecoli is broken, lympho is removed due to being categorical, breastw has too many outliers %-wise, this is fixed in wbc
+exclude_list = [".gitkeep", "ecoli.mat", "breastw.mat", "lympho.mat"] #ecoli is broken, lympho is removed due to being categorical, breastw has too many outliers %-wise, this is fixed in wbc
 
 
 json_meta_data_path = os.path.join(raw_dir, "ODDS_data_raw","categorical_variables_per_dataset.json")
@@ -103,7 +103,7 @@ origin = "ODDS"
 #%%
 # Regular mat files
 
-for file_name in [f for f in matfile_names if f not in HDFlist and f not in black_list]:
+for file_name in [f for f in matfile_names if f not in HDFlist and f not in exclude_list]:
     
     full_path_filename = os.path.join(data_dir, file_name)
     mat_file = loadmat(full_path_filename)
@@ -138,7 +138,7 @@ for file_name in [f for f in matfile_names if f not in HDFlist and f not in blac
 #%%
 # HDF mat files
     
-for file_name in HDFlist:
+for file_name in [f for f in HDFlist if f not in exclude_list]:
     print("----------------------------------------------------")
     print("Processing: " + file_name)
     print("----------------------------------------------------")
@@ -262,13 +262,13 @@ if not os.path.exists(target_dir):
 
 csv_file_names = os.listdir(data_dir)
 
-black_list =  ["annthyroid", "letter", "satellite", "shuttle", "speech", "breast-cancer"]
-black_list = [f+"-unsupervised-ad.csv" for f in black_list]
-
+exclude_list =  ["annthyroid", "letter", "satellite", "shuttle", "speech", "breast-cancer"]
+exclude_list = [f+"-unsupervised-ad.csv" for f in exclude_list]
+exclude_list += [".gitkeep"]
 origin="Goldstein"
 
 #%% Write Goldstein CSVs to pickles
-for file_name in [f for f in csv_file_names if f not in black_list]:
+for file_name in [f for f in csv_file_names if f not in exclude_list]:
     
     full_path_filename = os.path.join(data_dir, file_name)
     csv_file = pd.read_csv(full_path_filename)
@@ -308,12 +308,12 @@ if not os.path.exists(target_dir):
 
 csv_file_names = os.listdir(data_dir)
 
-black_list = ["Annthyroid", "WDBC"] 
+exclude_list = [".gitkeep", "Annthyroid", "WDBC"] 
 
 origin = "GAAL"
 
 #%% Write GAAL paper CSVs to pickles:
-for file_name in [f for f in csv_file_names if f not in black_list]:
+for file_name in [f for f in csv_file_names if f not in exclude_list]:
     
     full_path_filename = os.path.join(data_dir, file_name)
     csv_file = pd.read_csv(full_path_filename)
@@ -355,13 +355,13 @@ if not os.path.exists(target_dir):
 
 arff_file_folders = os.listdir(data_dir)
 
-black_list = ["Annthyroid", "Arrhythmia", "Cardiotocography", "HeartDisease", "Pima", "SpamBase"] 
+exclude_list = [".gitkeep", "Annthyroid", "Arrhythmia", "Cardiotocography", "HeartDisease", "Pima", "SpamBase"] 
 original_file_list = ["Hepatitis_withoutdupl_norm_16.arff", "InternetAds_withoutdupl_norm_19.arff", "PageBlocks_withoutdupl_norm_09.arff", "Parkinson_withoutdupl_norm_75.arff", "Stamps_withoutdupl_norm_09.arff", "Wilt_withoutdupl_norm_05.arff"]
 
 origin = "ELKI"
 
 #%% Write Campos paper ARFF to pickles:
-for file_folder, file_name in zip(sorted([f for f in arff_file_folders if f not in black_list]), original_file_list):
+for file_folder, file_name in zip(sorted([f for f in arff_file_folders if f not in exclude_list]), original_file_list):
     
     full_path_filename = os.path.join(data_dir, file_folder, file_name)
     arff_data = arff.loadarff(full_path_filename)
@@ -401,7 +401,7 @@ if not os.path.exists(target_dir):
 
 csv_file_names = os.listdir(data_dir)
 
-black_list = [] 
+exclude_list = [] 
 
 origin = "ex-AE"
 
@@ -605,12 +605,12 @@ if not os.path.exists(target_dir):
 
 csv_file_names = os.listdir(data_dir)
 
-black_list = [] 
+exclude_list = [".gitkeep"] 
 
 origin = "ADBench"
 
 
-for file_name in [f for f in os.listdir(data_dir) if f not in black_list]:
+for file_name in [f for f in os.listdir(data_dir) if f not in exclude_list]:
     
     full_path_filename = os.path.join(data_dir, file_name)
     npz_file = np.load(full_path_filename)
