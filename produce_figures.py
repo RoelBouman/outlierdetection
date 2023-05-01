@@ -270,6 +270,7 @@ plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot_all_datasets.eps",format="eps")
 plt.savefig("figures/ROCAUC_boxplot_all_datasets.png",format="png")
+plt.savefig("figures/ROCAUC_boxplot_all_datasets.pdf",format="pdf")
 plt.show()
 
 
@@ -283,6 +284,7 @@ clustermap = sns.clustermap(plot_df.transpose().iloc[:,:], method="average",metr
 
 clustermap.savefig("figures/clustermap_all_datasets.eps",format="eps")
 clustermap.savefig("figures/clustermap_all_datasets.png",format="png")
+clustermap.savefig("figures/clustermap_all_datasets.pdf",format="pdf")
 plt.show()
 
 #%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10
@@ -407,6 +409,7 @@ plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot_local_datasets.eps",format="eps")
 plt.savefig("figures/ROCAUC_boxplot_local_datasets.png",format="png")
+plt.savefig("figures/ROCAUC_boxplot_local_datasets.pdf",format="pdf")
 plt.show()
 
 #%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10
@@ -529,6 +532,8 @@ plt.xticks(rotation=90)
 plt.tight_layout()
 plt.savefig("figures/ROCAUC_boxplot_global_datasets.eps",format="eps")
 plt.savefig("figures/ROCAUC_boxplot_global_datasets.png",format="png")
+plt.savefig("figures/ROCAUC_boxplot_global_datasets.pdf",format="pdf")
+
 plt.show()
 
 #%% Make heatmap/table showing significance results at p < 0.05, p < 0.10, p>=0.10
