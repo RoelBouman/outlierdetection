@@ -68,7 +68,13 @@ Or alternatively, you can add additional arguments to run only subsets. For exam
 python3 run_all_methods.py --method kNN --dataset wine
 ```
 
-Reproducing the figures and analysis from the paper is then easily done using the following command:
+As noted in the paper, we've inverted the labels for the `skin` and `vertebral` datasets post-hoc. This can be reproduced by executing the following script:
+
+```
+python3 invert_labels_calculate_metrics.py
+```
+
+Finally, reproducing the figures and analysis from the paper is then easily done using the following command:
 
 
 ```
