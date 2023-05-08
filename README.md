@@ -5,7 +5,13 @@ Currently, this is the largest benchmark of unsupervised anomaly detection algor
 You can cite our paper as follows:
 
 ```
-insert Arxiv bibtex citation
+@article{bouman2023unsupervised,
+  title={Unsupervised anomaly detection algorithms on real-world data: how many do we need?},
+  author={Bouman, Roel and Bukhsh, Zaharah and Heskes, Tom},
+  journal={arXiv preprint arXiv:2305.00735},
+  year={2023}
+}
+
 ```
 
 ## Running the full benchmark
