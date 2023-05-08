@@ -11,7 +11,6 @@ You can cite our paper as follows:
   journal={arXiv preprint arXiv:2305.00735},
   year={2023}
 }
-
 ```
 
 ## Running the full benchmark
