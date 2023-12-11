@@ -39,22 +39,26 @@ def get_variance_filter_index(X, max_mode_samples):
     return(variance_filter)
    
     
-def preprocess_data(X,y):
-    (X_unique, unique_indices) = np.unique(X, axis=0, return_index=True)
-    y_unique = y[unique_indices]
-    
-    n_removed_duplicates = len(y)-len(y_unique)
-    print(str(n_removed_duplicates) + " samples were removed due to being duplicates.")
-    print("----------------------------------------------------")
-    
-    variance_filter = get_variance_filter_index(X_unique, X_unique.shape[0])
+def preprocess_data(X,y, remove_duplicates=False):
+    if remove_duplicates:
+        old_y_len = len(y)
+        (X, unique_indices) = np.unique(X, axis=0, return_index=True)
+        y = y[unique_indices]
+        
+        n_removed_duplicates = old_y_len-len(y)
+        print(str(n_removed_duplicates) + " samples were removed due to being duplicates.")
+        print("----------------------------------------------------")
+    else:
+        n_removed_duplicates = 0
+        
+    variance_filter = get_variance_filter_index(X, X.shape[0])
     n_variables_filtered = np.count_nonzero(variance_filter==0)
-    X_filtered = X_unique[:,variance_filter]
+    X_filtered = X[:,variance_filter]
     for i, v in enumerate(variance_filter):
         if not v:
             print("Variable " + str(i) + " was removed due to having low variance")
             
-    data_dict = {"X": X_filtered, "y": y_unique, "n_removed_duplicates": n_removed_duplicates, "n_variables_filtered": n_variables_filtered}
+    data_dict = {"X": X_filtered, "y": y, "n_removed_duplicates": n_removed_duplicates, "n_variables_filtered": n_variables_filtered}
     
     return(data_dict)
 
