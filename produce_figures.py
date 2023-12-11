@@ -282,7 +282,7 @@ plot_df = metric_dfs["ROC/AUC"].astype(float)
 
 clustermap = sns.clustermap(plot_df.transpose().iloc[:,:], method="average",metric="correlation", figsize=(15,15))
 
-clustermap.savefig("figures/clustermap_all_datasets.eps",format="eps")
+clustermap.savefig("figures/clustermap_all_datasets.eps",format="eps", dpi=1000)
 clustermap.savefig("figures/clustermap_all_datasets.png",format="png")
 clustermap.savefig("figures/clustermap_all_datasets.pdf",format="pdf")
 plt.show()
