@@ -109,18 +109,19 @@ from pyod.models.sod import SOD
 from pyod.models.ecod import ECOD
 from pyod.models.lunar import LUNAR
 from pyod.models.so_gaal import SO_GAAL
-from pyod.models.mo_gaal import MO_GAAL
+#from pyod.models.mo_gaal import MO_GAAL
 from pyod.models.combination import maximization
 
 from additional_methods.ensemble import  Ensemble
 from additional_methods.wrappers.ExtendedIForest import ExtendedIForest
 from additional_methods.ODIN import ODIN
 from additional_methods.gen2out.gen2out import gen2Out
-from additional_methods.SVDD.src.BaseSVDD import BaseSVDD
+#from additional_methods.SVDD.src.BaseSVDD import BaseSVDD
+from additional_methods.wrappers.HBOS import DynamicHBOS
 
 from additional_methods.wrappers.AE import AE_wrapper
 from additional_methods.wrappers.VAE import VAE_wrapper
-from additional_methods.wrappers.rrcf import rrcf_wrapper
+#from additional_methods.wrappers.rrcf import rrcf_wrapper
 from additional_methods.wrappers.ALAD import ALAD_wrapper
 
 ensemble_LOF_krange = range(5,31)
@@ -159,6 +160,7 @@ method_classes = {
         "sb-DeepSVDD":[],
         "ALAD":ALAD_wrapper,
         "SO-GAAL":SO_GAAL,
+        "DynamicHBOS":DynamicHBOS
         }
 
 #dict of methods and parameters
@@ -194,7 +196,8 @@ method_parameters = {
         "DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
         "sb-DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
         "ALAD":{"n_layers":[3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "output_activation":["linear"], "verbose":[0]},
-        "SO-GAAL":{"stop_epochs":[50]}
+        "SO-GAAL":{"stop_epochs":[50]},
+        "DynamicHBOS":{}
         }
 
 #%% 
@@ -250,11 +253,18 @@ for dataset_name in dataset_names:
                     
     X, y = data["X"], np.squeeze(data["y"])
     
+    max_duplicates = data["max_duplicates"]
+    
     #loop over all methods:
 
     for method_name, OD_class in all_methods_to_run.items():
         print("-" + method_name)
         hyperparameter_grid = method_parameters[method_name]
+        
+        #In case max_duplicates > k, these methods need an increase in k:
+        if method_name in ["LOF", "COF", "ABOD", "ensemble-LOF"]:
+            hyperparameter_grid["n_neighbors"] = [k+max_duplicates for k in hyperparameter_grid["n_neighbors"]]
+        
         hyperparameter_list = list(ParameterGrid(hyperparameter_grid))
         
         #loop over hyperparameter settings
