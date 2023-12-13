@@ -40,10 +40,14 @@ def get_variance_filter_index(X, max_mode_samples):
    
     
 def preprocess_data(X,y, remove_duplicates=False):
+    (X_unique, unique_indices, unique_counts) = np.unique(X, axis=0, return_index=True, return_counts=True)
+    max_duplicates = np.max(unique_counts)
+    
     if remove_duplicates:
         old_y_len = len(y)
-        (X, unique_indices) = np.unique(X, axis=0, return_index=True)
+        (X_unique, unique_indices) = np.unique(X, axis=0, return_index=True)
         y = y[unique_indices]
+        X = X_unique
         
         n_removed_duplicates = old_y_len-len(y)
         print(str(n_removed_duplicates) + " samples were removed due to being duplicates.")
@@ -58,7 +62,7 @@ def preprocess_data(X,y, remove_duplicates=False):
         if not v:
             print("Variable " + str(i) + " was removed due to having low variance")
             
-    data_dict = {"X": X_filtered, "y": y, "n_removed_duplicates": n_removed_duplicates, "n_variables_filtered": n_variables_filtered}
+    data_dict = {"X": X_filtered, "y": y, "n_removed_duplicates": n_removed_duplicates, "n_variables_filtered": n_variables_filtered, "max_duplicates":max_duplicates}
     
     return(data_dict)
 
@@ -71,6 +75,7 @@ def make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     n_categorical_variables = len(categorical_variables)
     n_numeric_variables = n_variables - n_categorical_variables
     n_variables_filtered = data_dict["n_variables_filtered"]
+    max_duplicates = data_dict["max_duplicates"]
     
     #summary = pd.DataFrame([[n_samples, n_variables, str(n_outliers) + " (" + str(outlier_percentage) + "%)", n_removed_duplicates, n_numeric_variables, n_categorical_variables, n_variables_filtered]], 
     #                       columns=["#samples", "#variables", "#outliers (%outliers)", "#removed duplicates", "#numeric variables", "#categorical variables", "#removed variables"])
@@ -84,7 +89,8 @@ def make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
                "#duplicates": n_removed_duplicates, 
                "#numeric variables": n_numeric_variables, 
                "#categorical variables": n_categorical_variables, 
-               "#removed variables": n_variables_filtered}
+               "#removed variables": n_variables_filtered,
+               "#max duplicates": max_duplicates}
     
     return(summary)
 #%% ODDS
@@ -661,7 +667,7 @@ for file_name in [f for f in os.listdir(data_dir) if f not in exclude_list]:
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 summaries_df.set_index("Name", inplace=True)
 
-summaries_df.drop(["#numeric variables", "#categorical variables"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
+summaries_df.drop(["#numeric variables", "#categorical variables", "#max duplicates"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
 #summaries_df.drop(filter_rows, inplace=True)
 #summaries_df.rename(rename_rows, inplace=True)
 summaries_df.to_csv("tables/datasets_summaries.csv", index=True)
