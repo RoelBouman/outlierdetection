@@ -269,7 +269,7 @@ for dataset_name in dataset_names:
         elif method_name ==  "ensemble-LOF":
             if max_duplicates >= min(ensemble_LOF_krange):
                 temp_ensemble_LOF_krange = [int(k+max_duplicates) for k in ensemble_LOF_krange]
-                hyperparameter_grid["estimators"] = [LOF(n_neighbors=k) for k in temp_ensemble_LOF_krange]
+                hyperparameter_grid["estimators"] = [[LOF(n_neighbors=k) for k in temp_ensemble_LOF_krange]]
                 
         hyperparameter_list = list(ParameterGrid(hyperparameter_grid))
         
@@ -277,7 +277,10 @@ for dataset_name in dataset_names:
         for hyperparameter_setting in hyperparameter_list:
             
             if method_name == "ensemble-LOF":
-                hyperparameter_string = str(ensemble_LOF_krange)
+                if max_duplicates >= min(ensemble_LOF_krange):
+                    hyperparameter_string = str(temp_ensemble_LOF_krange)
+                else:                    
+                    hyperparameter_string = str(ensemble_LOF_krange)
             else:
                 hyperparameter_string = str(hyperparameter_setting)
                 
