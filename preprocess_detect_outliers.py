@@ -81,7 +81,7 @@ def preprocess_detect_outliers(methods, method_parameters, verbose=True, input_t
                 
                 #check whether results have  been calculated
                 full_target_dir = os.path.join(target_dir, dataset_name.replace("."+input_type, ""), method_name)
-                target_file_name = os.path.join(target_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+"."+input_type)
+                target_file_name = os.path.join(target_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+".pickle")
                 if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
                     if verbose:
                         print(" results already calculated, skipping recalculation")
