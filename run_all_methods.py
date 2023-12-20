@@ -131,10 +131,10 @@ method_classes = {
         "INNE":INNE,
         "GMM":GMM,
         "KDE":KDE,
-        "ABOD":ABOD, 
+        #"ABOD":ABOD, 
         "CBLOF":CBLOF,
         "u-CBLOF":CBLOF,
-        "COF":COF,
+        #"COF":COF,
         "COPOD":COPOD,
         "HBOS":HBOS,
         "kNN":KNN,
@@ -142,8 +142,8 @@ method_classes = {
         "IF":IForest,
         "LMDD":LMDD,
         "LODA":LODA,
-        "ensemble-LOF":Ensemble,
-        "LOF":LOF,
+        #"ensemble-LOF":Ensemble,
+        #"LOF":LOF,
         "MCD":MCD,
         "OCSVM":OCSVM,
         "PCA":PCA, 
@@ -168,7 +168,7 @@ method_parameters = {
         "INNE":{},
         "GMM":{"n_components":range(2,15)},
         "KDE":{},
-        "ABOD":{"method":["fast"], "n_neighbors":[60]}, 
+        #"ABOD":{"method":["fast"], "n_neighbors":[60]}, 
         "CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
         "u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
         "COF":{"n_neighbors":[5,10,15,20,25,30]},
@@ -261,15 +261,15 @@ for dataset_name in dataset_names:
         print("-" + method_name)
         hyperparameter_grid = method_parameters[method_name]
         
-        #In case max_duplicates > k, these methods need an increase in k:
-        if method_name in ["LOF", "COF", "ABOD"] and \
-        max_duplicates >= min(hyperparameter_grid["n_neighbors"]):
+        # #In case max_duplicates > k, these methods need an increase in k:
+        # if method_name in ["LOF", "COF", "ABOD"] and \
+        # max_duplicates >= min(hyperparameter_grid["n_neighbors"]):
                 
-            hyperparameter_grid["n_neighbors"] = [int(k+max_duplicates) for k in hyperparameter_grid["n_neighbors"]]
-        elif method_name ==  "ensemble-LOF":
-            if max_duplicates >= min(ensemble_LOF_krange):
-                temp_ensemble_LOF_krange = [int(k+max_duplicates) for k in ensemble_LOF_krange]
-                hyperparameter_grid["estimators"] = [[LOF(n_neighbors=k) for k in temp_ensemble_LOF_krange]]
+        #     hyperparameter_grid["n_neighbors"] = [int(k+max_duplicates) for k in hyperparameter_grid["n_neighbors"]]
+        # elif method_name ==  "ensemble-LOF":
+        #     if max_duplicates >= min(ensemble_LOF_krange):
+        #         temp_ensemble_LOF_krange = [int(k+max_duplicates) for k in ensemble_LOF_krange]
+        #         hyperparameter_grid["estimators"] = [[LOF(n_neighbors=k) for k in temp_ensemble_LOF_krange]]
                 
         hyperparameter_list = list(ParameterGrid(hyperparameter_grid))
         
@@ -277,10 +277,10 @@ for dataset_name in dataset_names:
         for hyperparameter_setting in hyperparameter_list:
             
             if method_name == "ensemble-LOF":
-                if max_duplicates >= min(ensemble_LOF_krange):
-                    hyperparameter_string = str(temp_ensemble_LOF_krange)
-                else:                    
-                    hyperparameter_string = str(ensemble_LOF_krange)
+                # if max_duplicates >= min(ensemble_LOF_krange):
+                #     #hyperparameter_string = str(temp_ensemble_LOF_krange)
+                # else:                    
+                hyperparameter_string = str(ensemble_LOF_krange)
             else:
                 hyperparameter_string = str(hyperparameter_setting)
                 
