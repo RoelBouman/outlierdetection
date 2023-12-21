@@ -19,6 +19,7 @@ os.makedirs(table_dir, exist_ok=True)
 os.makedirs(figure_dir, exist_ok=True)
 
 method_blacklist = []
+#TODO: What to do with the large_dataset_blacklist? Currently it is not in sync with the actual paper
 large_dataset_blacklist = ["celeba", "backdoor", "fraud"]
 double_dataset_blacklist = [] 
 unsolvable_dataset_blacklist = ["hrss_anomalous_standard", "wpbc", "yeast"]
