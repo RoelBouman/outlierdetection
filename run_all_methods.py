@@ -92,16 +92,16 @@ input_type = parsed_args.input_type
 from pyod.models.inne import INNE
 from pyod.models.kde import KDE
 from pyod.models.gmm import GMM
-from pyod.models.abod import ABOD
+#from pyod.models.abod import ABOD
 from pyod.models.cblof import CBLOF
-from pyod.models.cof import COF
+#from pyod.models.cof import COF
 from pyod.models.copod import COPOD
 from pyod.models.hbos import HBOS
 from pyod.models.iforest import IForest
 from pyod.models.knn import KNN 
 from pyod.models.lmdd import LMDD
 from pyod.models.loda import LODA
-from pyod.models.lof import LOF
+#from pyod.models.lof import LOF
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
@@ -124,17 +124,21 @@ from additional_methods.wrappers.VAE import VAE_wrapper
 #from additional_methods.wrappers.rrcf import rrcf_wrapper
 from additional_methods.wrappers.ALAD import ALAD_wrapper
 
-ensemble_LOF_krange = range(5,31)
+from additional_methods.lof import LOF
+from additional_methods.cof import COF
+from additional_methods.abod import ABOD
+
+ensemble_LOF_krange = range(5,31,3)
 
 #dict of methods and functions
 method_classes = {
         "INNE":INNE,
         "GMM":GMM,
         "KDE":KDE,
-        #"ABOD":ABOD, 
+        "ABOD":ABOD, 
         "CBLOF":CBLOF,
         "u-CBLOF":CBLOF,
-        #"COF":COF,
+        "COF":COF,
         "COPOD":COPOD,
         "HBOS":HBOS,
         "kNN":KNN,
@@ -142,8 +146,8 @@ method_classes = {
         "IF":IForest,
         "LMDD":LMDD,
         "LODA":LODA,
-        #"ensemble-LOF":Ensemble,
-        #"LOF":LOF,
+        "ensemble-LOF":Ensemble,
+        "LOF":LOF,
         "MCD":MCD,
         "OCSVM":OCSVM,
         "PCA":PCA, 
@@ -168,23 +172,23 @@ method_parameters = {
         "INNE":{},
         "GMM":{"n_components":range(2,15)},
         "KDE":{},
-        #"ABOD":{"method":["fast"], "n_neighbors":[60]}, 
-        "CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
-        "u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
-        "COF":{"n_neighbors":[5,10,15,20,25,30]},
+        "ABOD":{"method":["fast"], "n_neighbors":[60]}, 
+        "CBLOF":{"n_clusters":[2,5,10,15], "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
+        "u-CBLOF":{"n_clusters":[2,5,10,15], "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
+        "COF":{"n_neighbors":[10,20,30]},
         "COPOD":{},
         "HBOS":{"n_bins":["auto"]},
-        "kNN":{"n_neighbors":range(5,31), "method":["mean"]},
-        "kth-NN":{"n_neighbors":range(5,31), "method":["largest"]},
+        "kNN":{"n_neighbors":range(5,31,3), "method":["mean"]},
+        "kth-NN":{"n_neighbors":range(5,31,3), "method":["largest"]},
         "IF":{"n_estimators":[1000], "max_samples":[128,256,512,1024]},
         "LMDD":{"n_iter":[100],"dis_measure":["aad"]}, #aad is the same as the MAD
         "LODA":{"n_bins":["auto"]},
         "ensemble-LOF":{"estimators":[[LOF(n_neighbors=k) for k in ensemble_LOF_krange]], "combination_function":[maximization]},
-        "LOF":{"n_neighbors":range(5,31)},
+        "LOF":{"n_neighbors":range(5,31,3)},
         "MCD":{"support_fraction":[0.6,0.7,0.8,0.9], "assume_centered":[True]},
         "OCSVM":{"kernel":["rbf"], "gamma":["auto"], "nu":[0.5,0.6,0.7,0.8,0.9]},
         "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
-        "SOD":{"n_neighbors":[20, 25 ,30], "ref_set":[10,14,18], "alpha":[0.7,0.8,0.9]},
+        "SOD":{"n_neighbors":[20,30], "ref_set":[10,18], "alpha":[0.7,0.9]},
         "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
         "ODIN":{"n_neighbors":range(5,31)},
         "ECOD":{},
@@ -299,7 +303,7 @@ for dataset_name in dataset_names:
                 
                 #use memory efficient COF when too many samples:
                 if method_name =="COF" and X.shape[0] > 8000:
-                    hyperparameter_setting["method"] = "memory"
+                    hyperparameter_setting["method"] = "knn"
                 
                 #process DeepSVDD differently due to lacking sklearn interface
                 #instead: call deepsvdd script from command line with arguments parsed from variables (also needed for custom Conda env)
