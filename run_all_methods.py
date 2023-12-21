@@ -249,7 +249,7 @@ for dataset_name in dataset_names:
     if input_type == "pickle":
         data = pickle.load(open(full_path_filename, 'rb'))
     elif input_type == "npz":
-        data = data = np.load(open(full_path_filename, 'rb'))
+        data  = np.load(open(full_path_filename, 'rb'))
                     
     X, y = data["X"], np.squeeze(data["y"])
     
