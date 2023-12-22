@@ -101,7 +101,7 @@ from pyod.models.iforest import IForest
 from pyod.models.knn import KNN 
 from pyod.models.lmdd import LMDD
 from pyod.models.loda import LODA
-#from pyod.models.lof import LOF
+from pyod.models.lof import LOF
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
@@ -124,7 +124,6 @@ from additional_methods.wrappers.VAE import VAE_wrapper
 #from additional_methods.wrappers.rrcf import rrcf_wrapper
 from additional_methods.wrappers.ALAD import ALAD_wrapper
 
-from additional_methods.lof import LOF
 from additional_methods.cof import COF
 from additional_methods.abod import ABOD
 
