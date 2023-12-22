@@ -189,7 +189,7 @@ method_parameters = {
         "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
         "SOD":{"n_neighbors":[20,30], "ref_set":[10,18], "alpha":[0.7,0.9]},
         "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
-        "ODIN":{"n_neighbors":range(5,31)},
+        "ODIN":{"n_neighbors":range(5,31,3)},
         "ECOD":{},
         "gen2out":{},
         "AE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
