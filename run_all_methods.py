@@ -105,7 +105,7 @@ from pyod.models.lof import LOF
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
-from pyod.models.sod import SOD
+#from pyod.models.sod import SOD
 from pyod.models.ecod import ECOD
 from pyod.models.lunar import LUNAR
 from pyod.models.so_gaal import SO_GAAL
@@ -126,6 +126,7 @@ from additional_methods.wrappers.ALAD import ALAD_wrapper
 
 from additional_methods.cof import COF
 from additional_methods.abod import ABOD
+from additional_methods.sod import SOD
 
 ensemble_LOF_krange = range(5,31,3)
 
@@ -229,6 +230,14 @@ if include_datasets == "all":
     pass        
 elif include_datasets+"."+input_type in dataset_names:
     dataset_names = [include_datasets+"."+input_type]
+
+#%% manual skip of datasets being calculated on other machines
+skip_datasets = ["http"+"."+input_type, "cover"+"."+input_type]
+
+try:
+    dataset_names.remove(skip_datasets)
+except ValueError:
+    pass
 #%% loop over all data, but do not reproduce existing results
 
 
