@@ -36,6 +36,14 @@ score_functions = {"ROC/AUC": roc_auc_score,
                    "average_precision": average_precision_score, 
                    "adjusted_average_precision": adjusted_average_precision}
 
+#%% check filename valid:
+    
+def fix_filename(filename):
+    # if Windows OS, replace : by _
+    if os.name == "nt":
+        return filename.replace(":", "_")
+    else:
+        return filename
 
 #%% argument parsing for command line functionality
 # Create the parser
@@ -105,7 +113,7 @@ from pyod.models.lof import LOF
 from pyod.models.mcd import MCD
 from pyod.models.ocsvm import OCSVM
 from pyod.models.pca import PCA
-#from pyod.models.sod import SOD
+from pyod.models.sod import SOD
 from pyod.models.ecod import ECOD
 from pyod.models.lunar import LUNAR
 from pyod.models.so_gaal import SO_GAAL
@@ -113,9 +121,9 @@ from pyod.models.so_gaal import SO_GAAL
 from pyod.models.combination import maximization
 
 from additional_methods.ensemble import  Ensemble
-from additional_methods.wrappers.ExtendedIForest import ExtendedIForest
+#from additional_methods.wrappers.ExtendedIForest import ExtendedIForest
 from additional_methods.ODIN import ODIN
-from additional_methods.gen2out.gen2out import gen2Out
+#from additional_methods.gen2out.gen2out import gen2Out
 #from additional_methods.SVDD.src.BaseSVDD import BaseSVDD
 from additional_methods.wrappers.HBOS import DynamicHBOS
 
@@ -152,16 +160,16 @@ method_classes = {
         "OCSVM":OCSVM,
         "PCA":PCA, 
         "SOD":SOD,
-        "EIF":ExtendedIForest,
+        #"EIF":ExtendedIForest,
         "ODIN":ODIN,
         "ECOD":ECOD,
-        "gen2out":gen2Out,
+#        "gen2out":gen2Out,
         "AE":AE_wrapper,
         "VAE":VAE_wrapper,
         "beta-VAE":VAE_wrapper,
         "LUNAR":LUNAR,
-        "DeepSVDD":[],#empty, because no sklearn object, but rather hardcoded script
-        "sb-DeepSVDD":[],
+ #       "DeepSVDD":[],#empty, because no sklearn object, but rather hardcoded script
+ #       "sb-DeepSVDD":[],
         "ALAD":ALAD_wrapper,
         "SO-GAAL":SO_GAAL,
         "DynamicHBOS":DynamicHBOS
@@ -189,10 +197,10 @@ method_parameters = {
         "OCSVM":{"kernel":["rbf"], "gamma":["auto"], "nu":[0.5,0.6,0.7,0.8,0.9]},
         "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
         "SOD":{"n_neighbors":[20,30], "ref_set":[10,18], "alpha":[0.7,0.9]},
-        "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
+#        "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
         "ODIN":{"n_neighbors":range(5,31,3)},
         "ECOD":{},
-        "gen2out":{},
+#        "gen2out":{},
         "AE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "beta-VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "gamma":[10,20,50], "verbose":[0]},
@@ -301,7 +309,8 @@ for dataset_name in dataset_names:
             
             #check whether results have  been calculated
             full_target_dir = os.path.join(target_dir, dataset_name.replace("."+input_type, ""), method_name)
-            target_file_name = os.path.join(target_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+".pickle")
+            target_file_name = fix_filename(os.path.join(target_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+".pickle"))
+            
             if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
                 if verbose:
                     print(" results already calculated, skipping recalculation")
@@ -348,7 +357,7 @@ for dataset_name in dataset_names:
                     #csv scores
                     full_target_scoredir = os.path.join(score_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_scoredir, exist_ok=True)
-                    csv_filename = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
+                    csv_filename = fix_filename(os.path.join(full_target_scoredir, hyperparameter_string+".csv"))
                     DeepSVDD_argument_list.append(csv_filename) #csv
                     
                     
@@ -379,7 +388,7 @@ for dataset_name in dataset_names:
                     #also write csv files for easy manual inspection of metrics
                     full_target_csvdir = os.path.join(target_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_csvdir, exist_ok=True)
-                    target_csvfile_name = os.path.join(full_target_csvdir, hyperparameter_string+".csv")
+                    target_csvfile_name = fix_filename(os.path.join(full_target_csvdir, hyperparameter_string+".csv"))
                     method_performance_df.to_csv(target_csvfile_name)
                     
                     
@@ -425,12 +434,12 @@ for dataset_name in dataset_names:
                     #also write csv files for easy manual inspection
                     full_target_csvdir = os.path.join(target_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_csvdir, exist_ok=True)
-                    target_csvfile_name = os.path.join(full_target_csvdir, hyperparameter_string+".csv")
+                    target_csvfile_name = fix_filename(os.path.join(full_target_csvdir, hyperparameter_string+".csv"))
                     method_performance_df.to_csv(target_csvfile_name)
                     
                     full_target_scoredir = os.path.join(score_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_scoredir, exist_ok=True)
-                    target_scorefile_name = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
+                    target_scorefile_name = fix_filename(os.path.join(full_target_scoredir, hyperparameter_string+".csv"))
                     np.savetxt(target_scorefile_name, outlier_scores)
                     
                     #write Keras history for relevant neural methods
