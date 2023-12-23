@@ -453,14 +453,14 @@ for dataset_name in dataset_names:
                             history_df = pd.DataFrame(history)
                         
                         full_target_dir = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name)
-                        target_file_name = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+"."+input_type)
+                        target_file_name = fix_filename(os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+"."+input_type))
                         
                         os.makedirs(full_target_dir, exist_ok=True)
                         with open(target_file_name, 'wb') as handle:
                             pickle.dump(history_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
                             
                         full_target_dir = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name)
-                        target_file_name = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+".csv")
+                        target_file_name = fix_filename(os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+".csv"))
                         
                         os.makedirs(full_target_dir, exist_ok=True)
     
