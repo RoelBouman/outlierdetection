@@ -240,8 +240,8 @@ elif include_datasets+"."+input_type in dataset_names:
     dataset_names = [include_datasets+"."+input_type]
 
 #%% manual skip of datasets being calculated on other machines
-skip_datasets = ["http"+"."+input_type, "cover"+"."+input_type]
-
+skip_datasets = ["http","cover", "aloi"]
+skip_datasets = [dataset+"."+input_type for dataset in include_datasets]
 try:
     dataset_names.remove(skip_datasets)
 except ValueError:
