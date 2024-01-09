@@ -8,7 +8,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-from numba import njit
+from numba import njit, prange
 from scipy import stats
 from sklearn.utils import check_array, check_random_state
 
@@ -23,26 +23,27 @@ def _aad(X):
     """
     return np.mean(np.absolute(X - np.mean(X)))
 
-@njit
+@njit(parallel=True)
 def _dis(X, dis_measure_=_aad):
     """
     Internal function to calculate for
     dissimilarity in a sequence of sets.
     """
-    res_ = np.zeros(shape=(X.shape[0],))
+    n = X.shape[0]
+    res_ = np.zeros((n,))
+    _var = np.zeros((n,))
     var_max, j = -np.inf, 0
     # this can be vectorized but just for comforting memory
-    for i in range(1, X.shape[0]):
-        _var = dis_measure_(X[:i + 1]) - dis_measure_(X[:i])
-        if _var > var_max:
-            var_max = _var
-            j = i
-            
+    for i in prange(1, n):
+        _var[i] = dis_measure_(X[:i + 1]) - dis_measure_(X[:i])
+
+    j = np.argmax(_var)
+    var_max = _var[j]
     
     if var_max > res_[j]:
         res_[j] = var_max
 
-        for k in range(j + 1, X.shape[0]):
+        for k in prange(j + 1, n):
             dk_diff = dis_measure_(np.vstack((X[:j], np.expand_dims(X[k], axis=0)))) - dis_measure_(np.vstack((X[:j + 1], np.expand_dims(X[k], axis=0))))
 
             if dk_diff >= 0:

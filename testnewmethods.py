@@ -31,8 +31,8 @@ X, y = data["X"], np.squeeze(data["y"])
 
 #add duplicates to X and y:
     
-# X = np.concatenate([X]*20)
-# y = np.concatenate([y]*20)
+X = np.concatenate([X]*10)
+y = np.concatenate([y]*10)
 
 
 plt.figure()
