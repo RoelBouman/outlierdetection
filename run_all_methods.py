@@ -81,7 +81,7 @@ arg_parser.add_argument('--input_type',
 arg_parser.add_argument('--skip-CBLOF',
                        metavar='C',
                        dest='skip_CBLOF',
-                       default=0,
+                       default=1,
                        type=int,
                        help='Bool to skip CBLOF execution during method = "all". When CBLOF has been calculated previously, redundant invalid clusterings will be calculated when this is set to 0 (False).')
 
@@ -107,7 +107,7 @@ from pyod.models.copod import COPOD
 from pyod.models.hbos import HBOS
 from pyod.models.iforest import IForest
 from pyod.models.knn import KNN 
-from pyod.models.lmdd import LMDD
+#from pyod.models.lmdd import LMDD
 from pyod.models.loda import LODA
 from pyod.models.lof import LOF
 from pyod.models.mcd import MCD
@@ -121,9 +121,9 @@ from pyod.models.so_gaal import SO_GAAL
 from pyod.models.combination import maximization
 
 from additional_methods.ensemble import  Ensemble
-#from additional_methods.wrappers.ExtendedIForest import ExtendedIForest
+from additional_methods.wrappers.ExtendedIForest import ExtendedIForest
 from additional_methods.ODIN import ODIN
-#from additional_methods.gen2out.gen2out import gen2Out
+from additional_methods.gen2out.gen2out import gen2Out
 #from additional_methods.SVDD.src.BaseSVDD import BaseSVDD
 from additional_methods.wrappers.HBOS import DynamicHBOS
 
@@ -135,6 +135,7 @@ from additional_methods.wrappers.ALAD import ALAD_wrapper
 from additional_methods.cof import COF
 from additional_methods.abod import ABOD
 from additional_methods.sod import SOD
+from additional_methods.lmdd import LMDD
 
 ensemble_LOF_krange = range(5,31,3)
 
@@ -160,16 +161,16 @@ method_classes = {
         "OCSVM":OCSVM,
         "PCA":PCA, 
         "SOD":SOD,
-        #"EIF":ExtendedIForest,
+        "EIF":ExtendedIForest,
         "ODIN":ODIN,
         "ECOD":ECOD,
-#        "gen2out":gen2Out,
+        "gen2out":gen2Out,
         "AE":AE_wrapper,
         "VAE":VAE_wrapper,
         "beta-VAE":VAE_wrapper,
         "LUNAR":LUNAR,
- #       "DeepSVDD":[],#empty, because no sklearn object, but rather hardcoded script
- #       "sb-DeepSVDD":[],
+        "DeepSVDD":[],#empty, because no sklearn object, but rather hardcoded script
+        "sb-DeepSVDD":[],
         "ALAD":ALAD_wrapper,
         "SO-GAAL":SO_GAAL,
         "DynamicHBOS":DynamicHBOS
@@ -197,10 +198,10 @@ method_parameters = {
         "OCSVM":{"kernel":["rbf"], "gamma":["auto"], "nu":[0.5,0.6,0.7,0.8,0.9]},
         "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
         "SOD":{"n_neighbors":[20,30], "ref_set":[10,18], "alpha":[0.7,0.9]},
-#        "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
+        "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
         "ODIN":{"n_neighbors":range(5,31,3)},
         "ECOD":{},
-#        "gen2out":{},
+        "gen2out":{},
         "AE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
         "beta-VAE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "gamma":[10,20,50], "verbose":[0]},
