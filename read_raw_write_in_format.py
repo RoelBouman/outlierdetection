@@ -1,5 +1,4 @@
 #Current procedure does the following:
-    #Remove duplicates
     #Filter based on variance
 
 #%% setup
@@ -662,7 +661,7 @@ for file_name in [f for f in os.listdir(data_dir) if f not in exclude_list]:
 
 #filter names:
 #filter_rows = ["hrss_anomalous_standard", "speech", "vertebral"]
-#filter_rows = ["backdoor", "celeba", "fraud"]
+filter_rows = ["backdoor", "celeba", "fraud"]
 #rename_rows = {"hrss_anomalous_optimized":"hrss"}
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 summaries_df.set_index("Name", inplace=True)
