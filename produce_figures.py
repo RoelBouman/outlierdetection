@@ -88,7 +88,7 @@ elif prune == "datasets":
     
     datasets = [m  for m in method_count_per_dataset if method_count_per_dataset[m] == max_methods]
     
-    incomplete_datasets = list(set(os.listdir(result_dir)) - set(datasets))
+    incomplete_datasets = list(set(os.listdir(result_dir)) - set(dataset_blacklist) - set(datasets))
     
     if len(incomplete_datasets) > 0:
         print("The following datasets were not calculated for each method:")
