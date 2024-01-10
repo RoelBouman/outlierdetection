@@ -9,7 +9,7 @@ import scipy.stats
 from scikit_posthocs import posthoc_nemenyi_friedman
 sns.set()
 
-prune = "methods"        
+prune = "datasets"        
 
 result_dir = "results/csvresult_dir"
 figure_dir = "figures"
@@ -22,7 +22,7 @@ method_blacklist = []
 #TODO: What to do with the large_dataset_blacklist? Currently it is not in sync with the actual paper
 large_dataset_blacklist = ["celeba", "backdoor", "fraud"]
 double_dataset_blacklist = [] 
-unsolvable_dataset_blacklist = ["hrss_anomalous_standard", "wpbc", "yeast"]
+unsolvable_dataset_blacklist = ["hrss_anomalous_standard", "wpbc"]
 dataset_blacklist = large_dataset_blacklist + unsolvable_dataset_blacklist + double_dataset_blacklist 
 
 rename_datasets = {"hrss_anomalous_optimized":"hrss"}
