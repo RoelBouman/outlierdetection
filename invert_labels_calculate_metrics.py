@@ -21,7 +21,7 @@ score_functions = {"ROC/AUC": roc_auc_score,
 # Skin originally has 1 being the skin pixel class, and 0 being the noise class. The skin class is however more homogeneous, so labels should be flipped.
 # Vertebral consist out of 3 classes, the normal class, and disk hernia/spondilolysthesis. The latter classes are combined and originally defined as 0 in ODDS, but they are conceptually the anomalies.ArithmeticError
 # yeast is poorly documented. We've replaced it with yeast6 from EOAD
-inverted_datasets = ["yeast"]#["skin", "vertebral"]
+inverted_datasets = ["yeast", "skin", "vertebral"]
 
 pickle_dir = "formatted_data"
 score_dir = "results/score_dir"
