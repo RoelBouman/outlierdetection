@@ -666,7 +666,7 @@ filter_rows = ["backdoor", "celeba", "fraud"]
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 summaries_df.set_index("Name", inplace=True)
 
-summaries_df.drop(["#numeric variables", "#categorical variables", "#max duplicates", "#udplicates"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
+summaries_df.drop(["#numeric features", "#categorical features", "#max duplicates", "#duplicates"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
 #summaries_df.drop(filter_rows, inplace=True)
 #summaries_df.rename(rename_rows, inplace=True)
 summaries_df.to_csv("tables/datasets_summaries.csv", index=True)
