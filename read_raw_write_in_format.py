@@ -82,13 +82,13 @@ def make_dataset_summary(dataset_name, data_dict, categorical_variables, origin)
     summary = {"Name": dataset_name,
                "Origin": origin,
                "#samples": n_samples, 
-               "#variables": n_variables, 
+               "#features": n_variables, 
                "#outliers": n_outliers,
                "%outliers": "("+str(outlier_percentage) + "%)", 
                "#duplicates": n_removed_duplicates, 
-               "#numeric variables": n_numeric_variables, 
-               "#categorical variables": n_categorical_variables, 
-               "#removed variables": n_variables_filtered,
+               "#numeric features": n_numeric_variables, 
+               "#categorical features": n_categorical_variables, 
+               "#removed features": n_variables_filtered,
                "#max duplicates": max_duplicates}
     
     return(summary)
@@ -666,7 +666,7 @@ filter_rows = ["backdoor", "celeba", "fraud"]
 summaries_df = pd.DataFrame(dataset_summaries).sort_values("Name")
 summaries_df.set_index("Name", inplace=True)
 
-summaries_df.drop(["#numeric variables", "#categorical variables", "#max duplicates"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
+summaries_df.drop(["#numeric variables", "#categorical variables", "#max duplicates", "#udplicates"], axis=1, inplace=True) #remove columns irrelevant to current iteration of research
 #summaries_df.drop(filter_rows, inplace=True)
 #summaries_df.rename(rename_rows, inplace=True)
 summaries_df.to_csv("tables/datasets_summaries.csv", index=True)
