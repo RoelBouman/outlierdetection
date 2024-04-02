@@ -9,7 +9,7 @@ import scipy.stats
 from scikit_posthocs import posthoc_nemenyi_friedman
 sns.set()
 
-prune = "methods"        
+prune = "datasets"        
 
 result_dir = "results/csvresult_dir"
 figure_dir = "figures"
@@ -19,9 +19,10 @@ os.makedirs(table_dir, exist_ok=True)
 os.makedirs(figure_dir, exist_ok=True)
 
 method_blacklist = []
+#TODO: What to do with the large_dataset_blacklist? Currently it is not in sync with the actual paper
 large_dataset_blacklist = ["celeba", "backdoor", "fraud"]
 double_dataset_blacklist = [] 
-unsolvable_dataset_blacklist = ["hrss_anomalous_standard", "wpbc", "yeast"]
+unsolvable_dataset_blacklist = ["hrss_anomalous_standard", "wpbc"]
 dataset_blacklist = large_dataset_blacklist + unsolvable_dataset_blacklist + double_dataset_blacklist 
 
 rename_datasets = {"hrss_anomalous_optimized":"hrss"}
@@ -87,7 +88,7 @@ elif prune == "datasets":
     
     datasets = [m  for m in method_count_per_dataset if method_count_per_dataset[m] == max_methods]
     
-    incomplete_datasets = list(set(os.listdir(result_dir)) - set(datasets))
+    incomplete_datasets = list(set(os.listdir(result_dir)) - set(dataset_blacklist) - set(datasets))
     
     if len(incomplete_datasets) > 0:
         print("The following datasets were not calculated for each method:")
@@ -199,11 +200,16 @@ def p_value_to_string(p_value, n_decimals):
 n_decimals = 3
 
 score_df = metric_dfs["ROC/AUC"]
+n_columns_first_half = int(len(score_df.columns)/2)
 
+header = ["\\rot{"+column+"}" for column in score_df.columns[:n_columns_first_half]]
+table_file = open("tables/AUC_all_datasets_first_half.tex","w")
+score_df.iloc[:,:n_columns_first_half].astype(float).round(2).to_latex(table_file, header=header, escape=False)
+table_file.close()
 
-header = ["\\rot{"+column+"}" for column in score_df.columns]
-table_file = open("tables/AUC_all_datasets.tex","w")
-score_df.astype(float).round(2).to_latex(table_file, header=header, escape=False)
+header = ["\\rot{"+column+"}" for column in score_df.columns[n_columns_first_half:]]
+table_file = open("tables/AUC_all_datasets_second_half.tex","w")
+score_df.iloc[:,n_columns_first_half:].astype(float).round(2).to_latex(table_file, header=header, escape=False)
 table_file.close()
 
 
@@ -220,7 +226,9 @@ print("iman davenport score: " + str(iman_davenport_score))
 print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
-nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
+nemenyi_table_copy = nemenyi_table.copy(deep=True)
+nemenyi_table_copy.columns = ["\\rot{"+column+"}" for column in nemenyi_table_copy.columns] 
+nemenyi_formatted = nemenyi_table_copy.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
 #table_file = open("tables/nemenyi_table_all_datasets.tex","w")
 nemenyi_formatted.to_latex("tables/nemenyi_table_all_datasets.tex", hrules=True)
@@ -282,7 +290,7 @@ plot_df = metric_dfs["ROC/AUC"].astype(float)
 
 clustermap = sns.clustermap(plot_df.transpose().iloc[:,:], method="average",metric="correlation", figsize=(15,15))
 
-clustermap.savefig("figures/clustermap_all_datasets.eps",format="eps")
+clustermap.savefig("figures/clustermap_all_datasets.eps",format="eps", dpi=1000)
 clustermap.savefig("figures/clustermap_all_datasets.png",format="png")
 clustermap.savefig("figures/clustermap_all_datasets.pdf",format="pdf")
 plt.show()
@@ -340,7 +348,7 @@ table_file.close()
 
 #%% Local datasets
 
-local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "glass", "ionosphere", "nasa", "fault", "landsat", "donors"]
+local_datasets = ["skin", "ionosphere", "glass", "landsat", "fault", "vowels", "pen-local", "letter", "wilt", "nasa", "parkinson", "waveform", "magic.gamma", "pima", "internetads", "speech", "aloi"]#["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "glass", "ionosphere", "nasa", "fault", "landsat", "donors"]
 
 #check if all local datasets have been calculated/are not in blacklist:
 local_datasets = [dataset for dataset in local_datasets if dataset in metric_dfs["ROC/AUC"].columns]
@@ -360,7 +368,9 @@ print ("iman davenport score local: " + str(iman_davenport_score))
 print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
-nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
+nemenyi_table_copy = nemenyi_table.copy(deep=True)
+nemenyi_table_copy.columns = ["\\rot{"+column+"}" for column in nemenyi_table_copy.columns] 
+nemenyi_formatted = nemenyi_table_copy.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
 #table_file = open("tables/nemenyi_table_local.tex","w")
 nemenyi_formatted.to_latex("tables/nemenyi_table_local.tex", hrules=True)
@@ -462,9 +472,9 @@ table_file.close()
 
 
 #%% Global datasets
-
+non_cluster_datasets = ["vertebral"]
 score_df = metric_dfs["ROC/AUC"]
-global_datasets = score_df.columns.difference(local_datasets)
+global_datasets = score_df.columns.difference(local_datasets+non_cluster_datasets)
 score_df = score_df[global_datasets]
 
 rank_df = score_to_rank(score_df)
@@ -480,7 +490,9 @@ print ("iman davenport score global: " + str(iman_davenport_score))
 print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
-nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
+nemenyi_table_copy = nemenyi_table.copy(deep=True)
+nemenyi_table_copy.columns = ["\\rot{"+column+"}" for column in nemenyi_table_copy.columns] 
+nemenyi_formatted = nemenyi_table_copy.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
 #table_file = open("tables/nemenyi_table_global.tex","w")
 nemenyi_formatted.to_latex("tables/nemenyi_table_global.tex", hrules=True)

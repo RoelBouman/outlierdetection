@@ -21,7 +21,7 @@ score_functions = {"ROC/AUC": roc_auc_score,
 # Skin originally has 1 being the skin pixel class, and 0 being the noise class. The skin class is however more homogeneous, so labels should be flipped.
 # Vertebral consist out of 3 classes, the normal class, and disk hernia/spondilolysthesis. The latter classes are combined and originally defined as 0 in ODDS, but they are conceptually the anomalies.ArithmeticError
 # yeast is poorly documented. We've replaced it with yeast6 from EOAD
-inverted_datasets = ["skin", "vertebral"]
+inverted_datasets = ["yeast", "skin", "vertebral"]
 
 pickle_dir = "formatted_data"
 score_dir = "results/score_dir"
@@ -30,14 +30,16 @@ result_dir = "results/result_dir"
 figure_dir = "figures"
 table_dir = "tables"
 
-all_datasets = set(os.listdir(result_dir)) 
+#uncomment if new metrics need to be calculated:
+#all_datasets = set(os.listdir(result_dir)) 
 
-for dataset in all_datasets:
+#set inverted_datasets to all_datasets if new metrics need to be calculated
+for dataset in inverted_datasets:
     print(dataset)
     
-    full_path_filename = os.path.join(pickle_dir, dataset+".pickle")
+    full_path_filename = os.path.join(pickle_dir, dataset+".npz")
     
-    data = pickle.load(open(full_path_filename, 'rb'))
+    data = np.load(open(full_path_filename, 'rb'))
     X, y = data["X"], np.squeeze(data["y"])
     
     #invert y:

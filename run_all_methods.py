@@ -36,6 +36,14 @@ score_functions = {"ROC/AUC": roc_auc_score,
                    "average_precision": average_precision_score, 
                    "adjusted_average_precision": adjusted_average_precision}
 
+#%% check filename valid:
+    
+def fix_filename(filename):
+    # if Windows OS, replace : by _
+    if os.name == "nt":
+        return filename.replace(":", "_")
+    else:
+        return filename
 
 #%% argument parsing for command line functionality
 # Create the parser
@@ -73,7 +81,7 @@ arg_parser.add_argument('--input_type',
 arg_parser.add_argument('--skip-CBLOF',
                        metavar='C',
                        dest='skip_CBLOF',
-                       default=0,
+                       default=1,
                        type=int,
                        help='Bool to skip CBLOF execution during method = "all". When CBLOF has been calculated previously, redundant invalid clusterings will be calculated when this is set to 0 (False).')
 
@@ -92,14 +100,14 @@ input_type = parsed_args.input_type
 from pyod.models.inne import INNE
 from pyod.models.kde import KDE
 from pyod.models.gmm import GMM
-from pyod.models.abod import ABOD
+#from pyod.models.abod import ABOD
 from pyod.models.cblof import CBLOF
-from pyod.models.cof import COF
+#from pyod.models.cof import COF
 from pyod.models.copod import COPOD
 from pyod.models.hbos import HBOS
 from pyod.models.iforest import IForest
 from pyod.models.knn import KNN 
-from pyod.models.lmdd import LMDD
+#from pyod.models.lmdd import LMDD
 from pyod.models.loda import LODA
 from pyod.models.lof import LOF
 from pyod.models.mcd import MCD
@@ -109,21 +117,27 @@ from pyod.models.sod import SOD
 from pyod.models.ecod import ECOD
 from pyod.models.lunar import LUNAR
 from pyod.models.so_gaal import SO_GAAL
-from pyod.models.mo_gaal import MO_GAAL
+#from pyod.models.mo_gaal import MO_GAAL
 from pyod.models.combination import maximization
 
 from additional_methods.ensemble import  Ensemble
 from additional_methods.wrappers.ExtendedIForest import ExtendedIForest
 from additional_methods.ODIN import ODIN
 from additional_methods.gen2out.gen2out import gen2Out
-from additional_methods.SVDD.src.BaseSVDD import BaseSVDD
+#from additional_methods.SVDD.src.BaseSVDD import BaseSVDD
+from additional_methods.wrappers.HBOS import DynamicHBOS
 
 from additional_methods.wrappers.AE import AE_wrapper
 from additional_methods.wrappers.VAE import VAE_wrapper
-from additional_methods.wrappers.rrcf import rrcf_wrapper
+#from additional_methods.wrappers.rrcf import rrcf_wrapper
 from additional_methods.wrappers.ALAD import ALAD_wrapper
 
-ensemble_LOF_krange = range(5,31)
+from additional_methods.cof import COF
+from additional_methods.abod import ABOD
+from additional_methods.sod import SOD
+from additional_methods.lmdd import LMDD
+
+ensemble_LOF_krange = range(5,31,3)
 
 #dict of methods and functions
 method_classes = {
@@ -159,6 +173,7 @@ method_classes = {
         "sb-DeepSVDD":[],
         "ALAD":ALAD_wrapper,
         "SO-GAAL":SO_GAAL,
+        "DynamicHBOS":DynamicHBOS
         }
 
 #dict of methods and parameters
@@ -167,24 +182,24 @@ method_parameters = {
         "GMM":{"n_components":range(2,15)},
         "KDE":{},
         "ABOD":{"method":["fast"], "n_neighbors":[60]}, 
-        "CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
-        "u-CBLOF":{"n_clusters":range(2,15), "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
-        "COF":{"n_neighbors":[5,10,15,20,25,30]},
+        "CBLOF":{"n_clusters":[2,5,10,15], "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[True]},
+        "u-CBLOF":{"n_clusters":[2,5,10,15], "alpha":[0.7,0.8,0.9], "beta":[3,5,7], "use_weights":[False]},
+        "COF":{"n_neighbors":[10,20,30]},
         "COPOD":{},
         "HBOS":{"n_bins":["auto"]},
-        "kNN":{"n_neighbors":range(5,31), "method":["mean"]},
-        "kth-NN":{"n_neighbors":range(5,31), "method":["largest"]},
+        "kNN":{"n_neighbors":range(5,31,3), "method":["mean"]},
+        "kth-NN":{"n_neighbors":range(5,31,3), "method":["largest"]},
         "IF":{"n_estimators":[1000], "max_samples":[128,256,512,1024]},
         "LMDD":{"n_iter":[100],"dis_measure":["aad"]}, #aad is the same as the MAD
         "LODA":{"n_bins":["auto"]},
         "ensemble-LOF":{"estimators":[[LOF(n_neighbors=k) for k in ensemble_LOF_krange]], "combination_function":[maximization]},
-        "LOF":{"n_neighbors":range(5,31)},
+        "LOF":{"n_neighbors":range(5,31,3)},
         "MCD":{"support_fraction":[0.6,0.7,0.8,0.9], "assume_centered":[True]},
         "OCSVM":{"kernel":["rbf"], "gamma":["auto"], "nu":[0.5,0.6,0.7,0.8,0.9]},
         "PCA":{"n_components":[0.3,0.5,0.7,0.9]}, 
-        "SOD":{"n_neighbors":[20, 25 ,30], "ref_set":[10,14,18], "alpha":[0.7,0.8,0.9]},
+        "SOD":{"n_neighbors":[20,30], "ref_set":[10,18], "alpha":[0.7,0.9]},
         "EIF":{"n_estimators":[1000], "max_samples":[128,256,512,1024], "extension_level":[1,2,3]},
-        "ODIN":{"n_neighbors":range(5,31)},
+        "ODIN":{"n_neighbors":range(5,31,3)},
         "ECOD":{},
         "gen2out":{},
         "AE":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "epochs":[200], "validation_size":[0.2], "output_activation":["linear"], "verbose":[0]},
@@ -194,7 +209,8 @@ method_parameters = {
         "DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
         "sb-DeepSVDD":{"n_layers":[1,2,3], "shrinkage_factor":[0.2,0.3,0.5]},
         "ALAD":{"n_layers":[3], "shrinkage_factor":[0.2,0.3,0.5], "dropout_rate":[0], "output_activation":["linear"], "verbose":[0]},
-        "SO-GAAL":{"stop_epochs":[50]}
+        "SO-GAAL":{"stop_epochs":[50]},
+        "DynamicHBOS":{}
         }
 
 #%% 
@@ -223,6 +239,14 @@ if include_datasets == "all":
     pass        
 elif include_datasets+"."+input_type in dataset_names:
     dataset_names = [include_datasets+"."+input_type]
+
+#%% manual skip of datasets being calculated on other machines
+skip_datasets = ["http","cover", "aloi", "donors", "campaign", "mi-f", "mi-v", "internetads"]
+skip_datasets = [dataset+"."+input_type for dataset in include_datasets]
+try:
+    dataset_names.remove(skip_datasets)
+except ValueError:
+    pass
 #%% loop over all data, but do not reproduce existing results
 
 
@@ -246,21 +270,37 @@ for dataset_name in dataset_names:
     if input_type == "pickle":
         data = pickle.load(open(full_path_filename, 'rb'))
     elif input_type == "npz":
-        data = data = np.load(open(full_path_filename, 'rb'))
+        data  = np.load(open(full_path_filename, 'rb'))
                     
     X, y = data["X"], np.squeeze(data["y"])
+    
+    max_duplicates = data["max_duplicates"]
     
     #loop over all methods:
 
     for method_name, OD_class in all_methods_to_run.items():
         print("-" + method_name)
         hyperparameter_grid = method_parameters[method_name]
+        
+        # #In case max_duplicates > k, these methods need an increase in k:
+        # if method_name in ["LOF", "COF", "ABOD"] and \
+        # max_duplicates >= min(hyperparameter_grid["n_neighbors"]):
+                
+        #     hyperparameter_grid["n_neighbors"] = [int(k+max_duplicates) for k in hyperparameter_grid["n_neighbors"]]
+        # elif method_name ==  "ensemble-LOF":
+        #     if max_duplicates >= min(ensemble_LOF_krange):
+        #         temp_ensemble_LOF_krange = [int(k+max_duplicates) for k in ensemble_LOF_krange]
+        #         hyperparameter_grid["estimators"] = [[LOF(n_neighbors=k) for k in temp_ensemble_LOF_krange]]
+                
         hyperparameter_list = list(ParameterGrid(hyperparameter_grid))
         
         #loop over hyperparameter settings
         for hyperparameter_setting in hyperparameter_list:
             
             if method_name == "ensemble-LOF":
+                # if max_duplicates >= min(ensemble_LOF_krange):
+                #     #hyperparameter_string = str(temp_ensemble_LOF_krange)
+                # else:                    
                 hyperparameter_string = str(ensemble_LOF_krange)
             else:
                 hyperparameter_string = str(hyperparameter_setting)
@@ -270,7 +310,8 @@ for dataset_name in dataset_names:
             
             #check whether results have  been calculated
             full_target_dir = os.path.join(target_dir, dataset_name.replace("."+input_type, ""), method_name)
-            target_file_name = os.path.join(target_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+"."+input_type)
+            target_file_name = fix_filename(os.path.join(target_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+".pickle"))
+            
             if os.path.exists(target_file_name) and os.path.getsize(target_file_name) > 0:
                 if verbose:
                     print(" results already calculated, skipping recalculation")
@@ -280,7 +321,7 @@ for dataset_name in dataset_names:
                 
                 #use memory efficient COF when too many samples:
                 if method_name =="COF" and X.shape[0] > 8000:
-                    hyperparameter_setting["method"] = "memory"
+                    hyperparameter_setting["method"] = "knn"
                 
                 #process DeepSVDD differently due to lacking sklearn interface
                 #instead: call deepsvdd script from command line with arguments parsed from variables (also needed for custom Conda env)
@@ -317,7 +358,7 @@ for dataset_name in dataset_names:
                     #csv scores
                     full_target_scoredir = os.path.join(score_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_scoredir, exist_ok=True)
-                    csv_filename = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
+                    csv_filename = fix_filename(os.path.join(full_target_scoredir, hyperparameter_string+".csv"))
                     DeepSVDD_argument_list.append(csv_filename) #csv
                     
                     
@@ -348,7 +389,7 @@ for dataset_name in dataset_names:
                     #also write csv files for easy manual inspection of metrics
                     full_target_csvdir = os.path.join(target_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_csvdir, exist_ok=True)
-                    target_csvfile_name = os.path.join(full_target_csvdir, hyperparameter_string+".csv")
+                    target_csvfile_name = fix_filename(os.path.join(full_target_csvdir, hyperparameter_string+".csv"))
                     method_performance_df.to_csv(target_csvfile_name)
                     
                     
@@ -394,12 +435,12 @@ for dataset_name in dataset_names:
                     #also write csv files for easy manual inspection
                     full_target_csvdir = os.path.join(target_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_csvdir, exist_ok=True)
-                    target_csvfile_name = os.path.join(full_target_csvdir, hyperparameter_string+".csv")
+                    target_csvfile_name = fix_filename(os.path.join(full_target_csvdir, hyperparameter_string+".csv"))
                     method_performance_df.to_csv(target_csvfile_name)
                     
                     full_target_scoredir = os.path.join(score_csvdir, dataset_name.replace("."+input_type, ""), method_name)
                     os.makedirs(full_target_scoredir, exist_ok=True)
-                    target_scorefile_name = os.path.join(full_target_scoredir, hyperparameter_string+".csv")
+                    target_scorefile_name = fix_filename(os.path.join(full_target_scoredir, hyperparameter_string+".csv"))
                     np.savetxt(target_scorefile_name, outlier_scores)
                     
                     #write Keras history for relevant neural methods
@@ -413,14 +454,14 @@ for dataset_name in dataset_names:
                             history_df = pd.DataFrame(history)
                         
                         full_target_dir = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name)
-                        target_file_name = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+"."+input_type)
+                        target_file_name = fix_filename(os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+"."+input_type))
                         
                         os.makedirs(full_target_dir, exist_ok=True)
                         with open(target_file_name, 'wb') as handle:
                             pickle.dump(history_df, handle, protocol=pickle.HIGHEST_PROTOCOL)
                             
                         full_target_dir = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name)
-                        target_file_name = os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+".csv")
+                        target_file_name = fix_filename(os.path.join(log_dir, dataset_name.replace("."+input_type, ""), method_name, hyperparameter_string+".csv"))
                         
                         os.makedirs(full_target_dir, exist_ok=True)
     
