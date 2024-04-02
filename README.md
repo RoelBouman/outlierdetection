@@ -1,6 +1,6 @@
 # Unsupervised anomaly detection algorithms on real-world data: how many do we need?
 This is the repository supplementing our paper.
-Currently, this is the largest benchmark of unsupervised anomaly detection algorithms, with 32 algorithms applied on 52 datasets. 
+Currently, this is the largest benchmark of unsupervised anomaly detection algorithms, with 33 algorithms applied on 52 datasets. 
 
 You can cite our paper as follows:
 
