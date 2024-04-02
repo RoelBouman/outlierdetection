@@ -200,11 +200,16 @@ def p_value_to_string(p_value, n_decimals):
 n_decimals = 3
 
 score_df = metric_dfs["ROC/AUC"]
+n_columns_first_half = int(len(score_df.columns)/2)
 
+header = ["\\rot{"+column+"}" for column in score_df.columns[:n_columns_first_half]]
+table_file = open("tables/AUC_all_datasets_first_half.tex","w")
+score_df.iloc[:,:n_columns_first_half].astype(float).round(2).to_latex(table_file, header=header, escape=False)
+table_file.close()
 
-header = ["\\rot{"+column+"}" for column in score_df.columns]
-table_file = open("tables/AUC_all_datasets.tex","w")
-score_df.astype(float).round(2).to_latex(table_file, header=header, escape=False)
+header = ["\\rot{"+column+"}" for column in score_df.columns[n_columns_first_half:]]
+table_file = open("tables/AUC_all_datasets_second_half.tex","w")
+score_df.iloc[:,n_columns_first_half:].astype(float).round(2).to_latex(table_file, header=header, escape=False)
 table_file.close()
 
 
@@ -221,7 +226,9 @@ print("iman davenport score: " + str(iman_davenport_score))
 print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
-nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
+nemenyi_table_copy = nemenyi_table.copy(deep=True)
+nemenyi_table_copy.columns = ["\\rot{"+column+"}" for column in nemenyi_table_copy.columns] 
+nemenyi_formatted = nemenyi_table_copy.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
 #table_file = open("tables/nemenyi_table_all_datasets.tex","w")
 nemenyi_formatted.to_latex("tables/nemenyi_table_all_datasets.tex", hrules=True)
@@ -341,7 +348,7 @@ table_file.close()
 
 #%% Local datasets
 
-local_datasets = ["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "glass", "ionosphere", "nasa", "fault", "landsat", "donors"]
+local_datasets = ["skin", "ionosphere", "glass", "landsat", "fault", "vowels", "pen-local", "letter", "wilt", "nasa", "parkinson", "waveform", "magic.gamma", "pima", "internetads", "speech", "aloi"]#["parkinson", "wilt", "aloi", "vowels", "letter", "pen-local", "glass", "ionosphere", "nasa", "fault", "landsat", "donors"]
 
 #check if all local datasets have been calculated/are not in blacklist:
 local_datasets = [dataset for dataset in local_datasets if dataset in metric_dfs["ROC/AUC"].columns]
@@ -361,7 +368,9 @@ print ("iman davenport score local: " + str(iman_davenport_score))
 print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
-nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
+nemenyi_table_copy = nemenyi_table.copy(deep=True)
+nemenyi_table_copy.columns = ["\\rot{"+column+"}" for column in nemenyi_table_copy.columns] 
+nemenyi_formatted = nemenyi_table_copy.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
 #table_file = open("tables/nemenyi_table_local.tex","w")
 nemenyi_formatted.to_latex("tables/nemenyi_table_local.tex", hrules=True)
@@ -463,9 +472,9 @@ table_file.close()
 
 
 #%% Global datasets
-
+non_cluster_datasets = ["vertebral"]
 score_df = metric_dfs["ROC/AUC"]
-global_datasets = score_df.columns.difference(local_datasets)
+global_datasets = score_df.columns.difference(local_datasets+non_cluster_datasets)
 score_df = score_df[global_datasets]
 
 rank_df = score_to_rank(score_df)
@@ -481,7 +490,9 @@ print ("iman davenport score global: " + str(iman_davenport_score))
 print("Critical value: " + str(iman_davenport_critical_value(rank_df)))
 
 nemenyi_table = posthoc_nemenyi_friedman(rank_df)
-nemenyi_formatted = nemenyi_table.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
+nemenyi_table_copy = nemenyi_table.copy(deep=True)
+nemenyi_table_copy.columns = ["\\rot{"+column+"}" for column in nemenyi_table_copy.columns] 
+nemenyi_formatted = nemenyi_table_copy.applymap(lambda x: p_value_to_string(x, n_decimals)).style.apply(lambda x: ["textbf:--rwrap" if float(v) < 0.05 else "" for v in x])
 
 #table_file = open("tables/nemenyi_table_global.tex","w")
 nemenyi_formatted.to_latex("tables/nemenyi_table_global.tex", hrules=True)
