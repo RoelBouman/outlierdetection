@@ -1,15 +1,19 @@
 # Unsupervised anomaly detection algorithms on real-world data: how many do we need?
-This is the repository supplementing our paper.
+This is the repository supplementing our [JMLR paper](https://jmlr.org/papers/v25/23-0570.html).
 Currently, this is the largest benchmark of unsupervised anomaly detection algorithms, with 33 algorithms applied on 52 datasets. 
 
 You can cite our paper as follows:
 
 ```
-@article{bouman2023unsupervised,
-  title={Unsupervised anomaly detection algorithms on real-world data: how many do we need?},
-  author={Bouman, Roel and Bukhsh, Zaharah and Heskes, Tom},
-  journal={arXiv preprint arXiv:2305.00735},
-  year={2023}
+@article{Bouman2024UnsupervisedADComparison,
+  author  = {Roel Bouman and Zaharah Bukhsh and Tom Heskes},
+  title   = {Unsupervised Anomaly Detection Algorithms on Real-world Data: How Many Do We Need?},
+  journal = {Journal of Machine Learning Research},
+  year    = {2024},
+  volume  = {25},
+  number  = {105},
+  pages   = {1--34},
+  url     = {http://jmlr.org/papers/v25/23-0570.html}
 }
 ```
 
